@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-app: #08090f;
+  --color-surface: rgba(255, 255, 255, 0.075);
+  --color-viki: #ff4f87;
+  --color-viki-soft: #ff9ab8;
+  --color-muted: #b6bdca;
+  --color-subtle: #7f8797;
+  --shadow-panel: 0 18px 42px rgba(0, 0, 0, 0.32);
+  --shadow-poster: 0 18px 30px rgba(0, 0, 0, 0.38);
+  --shadow-nav: 0 -16px 40px rgba(0, 0, 0, 0.4);
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+  font-family: var(--font-sans);
+  background: #08090f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: #08090f;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #08090f;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgba(255, 79, 135, 0.35);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.poster-card {
+  contain: content;
+}

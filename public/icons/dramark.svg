@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Dramark">
+  <rect width="512" height="512" rx="112" fill="#08090f"/>
+  <path d="M108 360V152h119c66 0 113 43 113 104s-47 104-113 104H108Z" fill="#f8fafc"/>
+  <path d="M165 304h58c34 0 57-20 57-48s-23-48-57-48h-58v96Z" fill="#08090f"/>
+  <path d="M319 152h86v208h-58V234l-34 74h-35l-34-74v126h-58V152h86l24 66 23-66Z" fill="#ff4f87"/>
+</svg>
