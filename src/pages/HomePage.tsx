@@ -1,7 +1,7 @@
 import { ArrowRight, Library, Search } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
-import homeBackground from '@/assets/brand/dramark-home-bg.jpg';
+import homeBackground from '@/assets/brand/dramark-home-bg.png';
 import logoHorizontal from '@/assets/brand/dramark-logo-horizontal.png';
 import brandMark from '@/assets/brand/dramark-mark.png';
 import { MediaCard } from '@/features/catalog/MediaCard';
@@ -90,23 +90,20 @@ export function HomePage() {
 
   return (
     <div className="space-y-8">
-      <header className="relative -mx-4 -mt-[calc(1rem+env(safe-area-inset-top))] overflow-hidden px-4 pb-8 pt-[calc(2.25rem+env(safe-area-inset-top))] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <header className="relative -mx-4 -mt-[calc(1rem+env(safe-area-inset-top))] overflow-hidden px-4 pb-9 pt-[calc(2.6rem+env(safe-area-inset-top))] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <img
           src={homeBackground}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover object-[50%_26%] opacity-[0.58]"
+          className="absolute inset-0 h-full w-full object-cover object-[50%_22%] opacity-[0.66]"
           loading="eager"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(89,183,255,0.18),transparent_17rem),radial-gradient(circle_at_72%_18%,rgba(160,94,255,0.12),transparent_14rem),linear-gradient(180deg,rgba(7,9,18,0.18)_0%,rgba(7,9,18,0.72)_62%,#070912_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(89,183,255,0.18),transparent_17rem),radial-gradient(circle_at_72%_18%,rgba(160,94,255,0.12),transparent_14rem),linear-gradient(180deg,rgba(7,9,18,0.20)_0%,rgba(7,9,18,0.66)_58%,#070912_100%)]" />
         <div className="relative mx-auto flex max-w-xl flex-col items-center text-center">
-          <p className="text-xs font-semibold tracking-[0.18em] text-brand-soft/90">
-            Votre bibliothèque
-          </p>
           <img
             src={logoHorizontal}
             alt="Dramark"
-            className="mt-4 h-auto w-[min(17rem,78vw)] drop-shadow-[0_0_30px_rgba(89,183,255,0.25)] sm:w-80"
+            className="h-auto w-[min(15.5rem,72vw)] drop-shadow-[0_0_30px_rgba(89,183,255,0.24)] sm:w-72"
             loading="eager"
             decoding="async"
           />
