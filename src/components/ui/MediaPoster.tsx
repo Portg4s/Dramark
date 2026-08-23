@@ -47,13 +47,13 @@ export function MediaPoster({
       {posterUrl && imageState === 'loading' ? (
         <div
           aria-hidden="true"
-          className="absolute inset-0 animate-pulse bg-[linear-gradient(115deg,rgba(255,255,255,0.08),rgba(255,79,135,0.12),rgba(113,215,255,0.07))]"
+          className="absolute inset-0 animate-pulse bg-[linear-gradient(115deg,rgba(255,255,255,0.08),rgba(89,183,255,0.12),rgba(113,215,255,0.07))]"
         />
       ) : null}
 
       {!shouldShowPoster ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[linear-gradient(145deg,rgba(255,79,135,0.22),rgba(113,215,255,0.10),rgba(255,255,255,0.06))] p-4 text-center">
-          <Clapperboard aria-hidden="true" className="size-8 text-viki-soft" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[linear-gradient(145deg,rgba(89,183,255,0.18),rgba(113,215,255,0.10),rgba(255,255,255,0.06))] p-4 text-center">
+          <Clapperboard aria-hidden="true" className="size-8 text-brand-soft" />
           <span className="line-clamp-4 text-xs font-semibold leading-5 text-white">{title}</span>
         </div>
       ) : null}

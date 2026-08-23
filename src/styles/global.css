@@ -5,8 +5,8 @@
   --color-ink: #f7f2f5;
   --color-surface: rgba(19, 24, 39, 0.7);
   --color-surface-soft: rgba(255, 255, 255, 0.08);
-  --color-viki: #ff4f87;
-  --color-viki-soft: #ff9ab8;
+  --color-brand: #59b7ff;
+  --color-brand-soft: #9ad8ff;
   --color-cyan-soft: #71d7ff;
   --color-danger: #ff6b7a;
   --color-muted: #b8c0cf;
@@ -41,7 +41,7 @@ body {
   min-height: 100%;
   margin: 0;
   background:
-    radial-gradient(circle at 16% -10%, rgba(255, 79, 135, 0.2), transparent 22rem),
+    radial-gradient(circle at 16% -10%, rgba(89, 183, 255, 0.16), transparent 22rem),
     radial-gradient(circle at 94% 10%, rgba(113, 215, 255, 0.11), transparent 20rem),
     linear-gradient(180deg, #0c1020 0%, #070912 48%, #04050b 100%);
 }
@@ -64,7 +64,7 @@ a[href] {
 }
 
 ::selection {
-  background: rgba(255, 79, 135, 0.35);
+  background: rgba(89, 183, 255, 0.35);
 }
 
 .scrollbar-none {
@@ -107,7 +107,7 @@ a[href] {
 .focus-ring:focus-visible {
   box-shadow:
     0 0 0 2px #070912,
-    0 0 0 4px rgba(255, 79, 135, 0.95);
+    0 0 0 4px rgba(89, 183, 255, 0.95);
 }
 
 @keyframes page-enter {

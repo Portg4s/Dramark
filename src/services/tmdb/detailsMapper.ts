@@ -4,6 +4,7 @@ import type {
   TmdbCreditCast,
   TmdbCreditCrew,
   TmdbGenre,
+  TmdbImageMetadata,
   TmdbMovieDetailsResponse,
   TmdbNamedEntity,
   TmdbProductionCountry,
@@ -86,6 +87,30 @@ function getDirectors(crew: TmdbCreditCrew[] | null | undefined): string[] {
   );
 }
 
+function scoreLogo(logo: TmdbImageMetadata): number {
+  const language = logo.iso_639_1;
+  const languageScore =
+    language === 'fr' ? 30 : language === 'en' ? 20 : language === null ? 10 : 0;
+  return languageScore + (logo.vote_average ?? 0);
+}
+
+function pickLogoPath(logos: TmdbImageMetadata[] | null | undefined): string | undefined {
+  return (
+    [...(logos ?? [])]
+      .filter((logo) => cleanOptionalText(logo.file_path))
+      .sort((first, second) => scoreLogo(second) - scoreLogo(first))[0]?.file_path ?? undefined
+  );
+}
+
+function pickGalleryBackdrops(backdrops: TmdbImageMetadata[] | null | undefined): string[] {
+  return [...(backdrops ?? [])]
+    .filter((backdrop) => cleanOptionalText(backdrop.file_path) && (backdrop.width ?? 0) >= 700)
+    .sort((first, second) => (second.vote_average ?? 0) - (first.vote_average ?? 0))
+    .map((backdrop) => backdrop.file_path)
+    .filter((path): path is string => Boolean(path))
+    .slice(0, 6);
+}
+
 export function mapTmdbMovieDetailsToMediaDetails(movie: TmdbMovieDetailsResponse): MediaDetails {
   const title =
     cleanOptionalText(movie.title) ?? cleanOptionalText(movie.original_title) ?? 'Titre inconnu';
@@ -106,6 +131,9 @@ export function mapTmdbMovieDetailsToMediaDetails(movie: TmdbMovieDetailsRespons
     originCountries: cleanCountries(movie.production_countries),
     voteAverage: cleanNumber(movie.vote_average),
     popularity: cleanNumber(movie.popularity),
+    tagline: cleanOptionalText(movie.tagline),
+    logoPath: pickLogoPath(movie.images?.logos),
+    galleryBackdropPaths: pickGalleryBackdrops(movie.images?.backdrops),
     genres: cleanNames(movie.genres),
     voteCount: cleanNumber(movie.vote_count),
     runtimeMinutes: cleanNumber(movie.runtime),
@@ -137,6 +165,9 @@ export function mapTmdbTvDetailsToMediaDetails(show: TmdbTvDetailsResponse): Med
     originCountries: show.origin_country?.filter(Boolean) ?? [],
     voteAverage: cleanNumber(show.vote_average),
     popularity: cleanNumber(show.popularity),
+    tagline: cleanOptionalText(show.tagline),
+    logoPath: pickLogoPath(show.images?.logos),
+    galleryBackdropPaths: pickGalleryBackdrops(show.images?.backdrops),
     genres: cleanNames(show.genres),
     voteCount: cleanNumber(show.vote_count),
     seasonsCount: cleanNumber(show.number_of_seasons),
@@ -146,6 +177,8 @@ export function mapTmdbTvDetailsToMediaDetails(show: TmdbTvDetailsResponse): Med
     directors: [],
     creators: cleanNames(show.created_by),
     networks: cleanNames(show.networks),
-    cast: mapTvCast(show.aggregate_credits?.cast, show.credits?.cast)
+    cast: mapTvCast(show.aggregate_credits?.cast, undefined),
+    lastAirDate: cleanOptionalText(show.last_air_date),
+    nextAirDate: cleanOptionalText(show.next_episode_to_air?.air_date)
   };
 }

@@ -12,7 +12,7 @@ type MediaCardProps = {
 };
 
 function getMediaLabel(mediaType: CatalogMedia['mediaType']): string {
-  return mediaType === 'movie' ? 'Film' : 'Serie';
+  return mediaType === 'movie' ? 'Film' : 'Série';
 }
 
 function getStatusLabel(entry: LibraryEntryRecord | undefined): string | undefined {
@@ -20,7 +20,7 @@ function getStatusLabel(entry: LibraryEntryRecord | undefined): string | undefin
     return undefined;
   }
 
-  return entry.status === 'watchlist' ? 'A regarder' : 'Vu';
+  return entry.status === 'watchlist' ? 'À regarder' : 'Vu';
 }
 
 export function MediaCard({ media, entry }: MediaCardProps) {
@@ -36,7 +36,7 @@ export function MediaCard({ media, entry }: MediaCardProps) {
       <MediaPoster
         title={media.title}
         posterPath={media.posterPath}
-        className="transition duration-300 group-hover:scale-[1.025] group-focus-visible:ring-2 group-focus-visible:ring-viki group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-app"
+        className="transition duration-300 group-hover:scale-[1.025] group-focus-visible:ring-2 group-focus-visible:ring-brand group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-app"
       />
       <div className="mt-2 min-h-14">
         <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-white">{media.title}</h3>
@@ -46,7 +46,7 @@ export function MediaCard({ media, entry }: MediaCardProps) {
             {getMediaLabel(media.mediaType)}
           </span>
           {media.releaseYear ? <span>{media.releaseYear}</span> : null}
-          {statusLabel ? <span className="text-viki-soft">{statusLabel}</span> : null}
+          {statusLabel ? <span className="text-brand-soft">{statusLabel}</span> : null}
         </div>
       </div>
     </NavLink>

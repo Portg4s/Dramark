@@ -1,6 +1,17 @@
-import { CheckCircle2, Clock3, Film, MoreHorizontal, Star, Tv } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import {
+  CheckCircle2,
+  Clock3,
+  ExternalLink,
+  Film,
+  MoreHorizontal,
+  Star,
+  Trash2,
+  Tv
+} from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import type { ReactNode } from 'react';
 
+import { ActionMenu } from '@/components/ui/ActionMenu';
 import { MediaPoster } from '@/components/ui/MediaPoster';
 import type { CatalogMedia } from '@/features/catalog/types';
 import { getLibraryEntryStatusLabel } from '@/features/library/hooks';
@@ -17,11 +28,11 @@ type LibraryMediaItemProps = {
 };
 
 function getMediaLabel(mediaType: CatalogMedia['mediaType']): string {
-  return mediaType === 'movie' ? 'Film' : 'Serie';
+  return mediaType === 'movie' ? 'Film' : 'Série';
 }
 
 function getPrimaryActionLabel(status: LibraryStatus): string {
-  return status === 'watched' ? 'Marquer vu' : 'A regarder';
+  return status === 'watched' ? 'Marquer vu' : 'À regarder';
 }
 
 function StatusButton({
@@ -31,7 +42,7 @@ function StatusButton({
   onClick
 }: {
   active: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   disabled: boolean;
   onClick: () => void;
 }) {
@@ -43,7 +54,7 @@ function StatusButton({
       className={[
         'pressable focus-ring flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-55',
         active
-          ? 'bg-viki text-white shadow-[0_10px_24px_rgba(255,79,135,0.28)]'
+          ? 'bg-brand text-white shadow-[0_10px_24px_rgba(89,183,255,0.26)]'
           : 'bg-white/9 text-white hover:bg-white/14'
       ].join(' ')}
     >
@@ -60,14 +71,16 @@ export function LibraryMediaItem({
   onSetStatus,
   onRemove
 }: LibraryMediaItemProps) {
+  const navigate = useNavigate();
   const Icon = media.mediaType === 'movie' ? Film : Tv;
   const otherStatus: LibraryStatus = entry?.status === 'watchlist' ? 'watched' : 'watchlist';
   const statusLabel = getLibraryEntryStatusLabel(entry);
+  const detailPath = createMediaDetailPath(media.mediaType, media.tmdbId);
 
   return (
     <article className="media-enter group relative grid grid-cols-[5.6rem_1fr] gap-3 rounded-[1.35rem] bg-white/[0.055] p-2.5 shadow-[0_16px_38px_rgba(0,0,0,0.26)] transition duration-200 hover:bg-white/[0.075] sm:grid-cols-[6.2rem_1fr]">
       <NavLink
-        to={createMediaDetailPath(media.mediaType, media.tmdbId)}
+        to={detailPath}
         className="focus-ring rounded-[1.05rem]"
         aria-label={`Ouvrir la fiche de ${media.title}`}
       >
@@ -75,10 +88,7 @@ export function LibraryMediaItem({
       </NavLink>
 
       <div className="min-w-0 py-1 pr-1">
-        <NavLink
-          to={createMediaDetailPath(media.mediaType, media.tmdbId)}
-          className="focus-ring block rounded-lg"
-        >
+        <NavLink to={detailPath} className="focus-ring block rounded-lg">
           <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-medium text-subtle">
             <span className="inline-flex items-center gap-1 text-muted">
               <Icon aria-hidden="true" className="size-3.5" />
@@ -87,7 +97,7 @@ export function LibraryMediaItem({
             {media.releaseYear ? <span>{media.releaseYear}</span> : null}
             {media.originCountries[0] ? <span>{media.originCountries[0]}</span> : null}
             {media.voteAverage ? (
-              <span className="inline-flex items-center gap-1 text-viki-soft">
+              <span className="inline-flex items-center gap-1 text-brand-soft">
                 <Star aria-hidden="true" className="size-3.5 fill-current" />
                 {media.voteAverage.toFixed(1)}
               </span>
@@ -106,7 +116,7 @@ export function LibraryMediaItem({
               disabled={isBusy || entry?.status === 'watchlist'}
               onClick={() => onSetStatus(media, 'watchlist')}
             >
-              <Clock3 aria-hidden="true" className="size-4" />A regarder
+              <Clock3 aria-hidden="true" className="size-4" />À regarder
             </StatusButton>
             <StatusButton
               active={entry?.status === 'watched'}
@@ -123,7 +133,7 @@ export function LibraryMediaItem({
               type="button"
               disabled={isBusy}
               onClick={() => onSetStatus(media, otherStatus)}
-              className="pressable focus-ring flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-viki px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(255,79,135,0.26)] disabled:cursor-not-allowed disabled:opacity-55"
+              className="pressable focus-ring flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(89,183,255,0.24)] disabled:cursor-not-allowed disabled:opacity-55"
             >
               {otherStatus === 'watched' ? (
                 <CheckCircle2 aria-hidden="true" className="size-4" />
@@ -132,15 +142,36 @@ export function LibraryMediaItem({
               )}
               {getPrimaryActionLabel(otherStatus)}
             </button>
-            <button
-              type="button"
-              disabled={isBusy}
-              onClick={() => onRemove(media)}
-              className="pressable focus-ring flex size-11 shrink-0 items-center justify-center rounded-full bg-white/8 text-muted hover:bg-danger/16 hover:text-danger disabled:cursor-not-allowed disabled:opacity-55"
-              aria-label={`Retirer ${media.title} de ma liste`}
-            >
-              <MoreHorizontal aria-hidden="true" className="size-5" />
-            </button>
+            <ActionMenu
+              label={`Options pour ${media.title}`}
+              items={[
+                {
+                  label: 'Ouvrir la fiche',
+                  icon: <ExternalLink aria-hidden="true" className="size-4" />,
+                  onSelect: () => navigate(detailPath)
+                },
+                {
+                  label: 'Retirer de ma liste',
+                  icon: <Trash2 aria-hidden="true" className="size-4" />,
+                  destructive: true,
+                  onSelect: () => onRemove(media)
+                }
+              ]}
+              trigger={({ ref, isOpen, toggle }) => (
+                <button
+                  ref={ref}
+                  type="button"
+                  disabled={isBusy}
+                  onClick={toggle}
+                  aria-haspopup="menu"
+                  aria-expanded={isOpen}
+                  className="pressable focus-ring flex size-11 shrink-0 items-center justify-center rounded-full bg-white/8 text-muted hover:bg-white/12 hover:text-white disabled:cursor-not-allowed disabled:opacity-55"
+                  aria-label={`Options pour ${media.title}`}
+                >
+                  <MoreHorizontal aria-hidden="true" className="size-5" />
+                </button>
+              )}
+            />
           </div>
         )}
 

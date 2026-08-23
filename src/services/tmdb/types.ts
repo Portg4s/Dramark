@@ -103,32 +103,50 @@ export type TmdbAggregateCreditsResponse = {
   cast?: TmdbAggregateCast[] | null;
 };
 
+export type TmdbImageMetadata = {
+  file_path?: string | null;
+  iso_639_1?: string | null;
+  vote_average?: number | null;
+  width?: number | null;
+  height?: number | null;
+};
+
+export type TmdbImagesResponse = {
+  backdrops?: TmdbImageMetadata[] | null;
+  logos?: TmdbImageMetadata[] | null;
+};
+
 export type TmdbMovieDetailsResponse = TmdbDiscoverResultBase & {
   title?: string | null;
   original_title?: string | null;
   release_date?: string | null;
+  tagline?: string | null;
   runtime?: number | null;
   genres?: TmdbGenre[] | null;
   production_countries?: TmdbProductionCountry[] | null;
   vote_count?: number | null;
   credits?: TmdbCreditsResponse | null;
+  images?: TmdbImagesResponse | null;
 };
 
 export type TmdbTvDetailsResponse = TmdbDiscoverResultBase & {
   name?: string | null;
   original_name?: string | null;
   first_air_date?: string | null;
+  last_air_date?: string | null;
+  next_episode_to_air?: { air_date?: string | null } | null;
   episode_run_time?: number[] | null;
   number_of_episodes?: number | null;
   number_of_seasons?: number | null;
   status?: string | null;
+  tagline?: string | null;
   genres?: TmdbGenre[] | null;
   origin_country?: string[] | null;
   created_by?: TmdbNamedEntity[] | null;
   networks?: TmdbNamedEntity[] | null;
   vote_count?: number | null;
   aggregate_credits?: TmdbAggregateCreditsResponse | null;
-  credits?: TmdbCreditsResponse | null;
+  images?: TmdbImagesResponse | null;
 };
 
 export type TmdbCatalogSearchResponse = {

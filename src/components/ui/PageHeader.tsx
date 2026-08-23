@@ -8,7 +8,7 @@ export function PageHeader({ eyebrow, title, description }: PageHeaderProps) {
   return (
     <header className="mb-6 pt-2">
       {eyebrow ? (
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-viki">{eyebrow}</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-brand">{eyebrow}</p>
       ) : null}
       <h1 className="text-balance text-3xl font-black leading-tight text-white sm:text-5xl">
         {title}

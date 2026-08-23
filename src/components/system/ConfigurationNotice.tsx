@@ -12,7 +12,7 @@ export function ConfigurationNotice() {
       <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <p>
         Configuration TMDB absente. Renseigner{' '}
-        <span className="font-semibold">VITE_TMDB_ACCESS_TOKEN</span> pour activer les donnees
+        <span className="font-semibold">VITE_TMDB_ACCESS_TOKEN</span> pour activer les données
         distantes.
       </p>
     </div>

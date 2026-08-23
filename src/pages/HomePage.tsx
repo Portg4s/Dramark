@@ -25,7 +25,7 @@ function HomeAction({
       to={to}
       className="pressable focus-ring group flex min-h-16 items-center gap-3 rounded-[1.25rem] bg-white/[0.07] px-4 py-3 shadow-[0_16px_38px_rgba(0,0,0,0.22)] hover:bg-white/[0.1]"
     >
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-viki-soft">
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-brand-soft">
         <Icon aria-hidden="true" className="size-5" />
       </span>
       <span className="min-w-0 flex-1">
@@ -57,7 +57,7 @@ function HomeRail({
         <h2 className="text-xl font-bold text-white">{title}</h2>
         <NavLink
           to="/liste"
-          className="focus-ring rounded-full px-2 py-1 text-sm font-semibold text-viki-soft"
+          className="focus-ring rounded-full px-2 py-1 text-sm font-semibold text-brand-soft"
         >
           Tout voir
         </NavLink>
@@ -89,11 +89,11 @@ export function HomePage() {
     <div className="space-y-8">
       <header className="space-y-5 pt-2">
         <div>
-          <p className="text-sm font-semibold text-viki-soft">Votre bibliotheque</p>
+          <p className="text-sm font-semibold text-brand-soft">Votre bibliothèque</p>
           <h1 className="mt-1 text-5xl font-black leading-none text-white sm:text-6xl">Dramark</h1>
         </div>
         <p className="max-w-xl text-sm leading-6 text-muted">
-          {counts.watched} vus <span className="px-2 text-subtle">·</span> {counts.watchlist} a
+          {counts.watched} vus <span className="px-2 text-subtle">·</span> {counts.watchlist} à
           regarder
         </p>
       </header>
@@ -101,21 +101,21 @@ export function HomePage() {
       {hasEntries ? (
         <div className="space-y-8">
           <HomeRail
-            title="A regarder"
+            title="À regarder"
             entries={watchlistEntries}
             empty="Ajoutez votre prochain titre depuis la recherche."
           />
           <HomeRail
-            title="Recemment vus"
+            title="Récemment vus"
             entries={watchedEntries}
-            empty="Les titres termines apparaitront ici."
+            empty="Les titres terminés apparaîtront ici."
           />
         </div>
       ) : (
-        <section className="relative overflow-hidden rounded-[1.7rem] bg-[linear-gradient(135deg,rgba(255,79,135,0.20),rgba(113,215,255,0.08)_52%,rgba(255,255,255,0.055))] p-5 shadow-panel">
+        <section className="relative overflow-hidden rounded-[1.7rem] bg-[linear-gradient(135deg,rgba(89,183,255,0.16),rgba(113,215,255,0.08)_52%,rgba(255,255,255,0.055))] p-5 shadow-panel">
           <div
             aria-hidden="true"
-            className="absolute -right-16 -top-20 size-48 rounded-full bg-viki/18 blur-3xl"
+            className="absolute -right-16 -top-20 size-48 rounded-full bg-brand/18 blur-3xl"
           />
           <div className="relative space-y-4">
             <h2 className="max-w-sm text-2xl font-black leading-tight text-white">
@@ -127,7 +127,7 @@ export function HomePage() {
             </p>
             <NavLink
               to="/recherche"
-              className="pressable focus-ring inline-flex min-h-12 items-center gap-2 rounded-full bg-viki px-5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(255,79,135,0.30)]"
+              className="pressable focus-ring inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(89,183,255,0.28)]"
             >
               Rechercher
               <ArrowRight aria-hidden="true" className="size-4" />
@@ -140,7 +140,7 @@ export function HomePage() {
         <HomeAction
           to="/recherche"
           title="Recherche"
-          description="Ajouter un film ou une serie."
+          description="Ajouter un film ou une série."
           icon={Search}
         />
         <HomeAction

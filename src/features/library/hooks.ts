@@ -115,8 +115,8 @@ export function useLibraryMediaActions() {
 
 export function getLibraryEntryStatusLabel(entry: LibraryEntryRecord | undefined): string {
   if (!entry) {
-    return 'Non classe';
+    return 'Non classé';
   }
 
-  return entry.status === 'watchlist' ? 'A regarder' : 'Vu';
+  return entry.status === 'watchlist' ? 'À regarder' : 'Vu';
 }

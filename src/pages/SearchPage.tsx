@@ -1,10 +1,11 @@
 import { Search, X } from 'lucide-react';
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import type { CatalogMedia } from '@/features/catalog/types';
 import { useLibraryIndex, useLibraryMediaActions } from '@/features/library/hooks';
 import { LibraryMediaItem } from '@/features/library/LibraryMediaItem';
 import { useTmdbMediaSearch } from '@/features/search/hooks';
+import { createSearchParamsForQuery, normalizeSearchQuery } from '@/features/search/searchParams';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { tmdbRuntimeConfig } from '@/services/tmdb/config';
 import type { LibraryStatus } from '@/types/media';
@@ -16,23 +17,28 @@ function getSearchMessage(query: string, debouncedQuery: string): string | undef
   }
 
   if (query.trim().length === 0) {
-    return 'Recherchez le titre que vous venez de reperer.';
+    return 'Recherchez le titre que vous venez de repérer.';
   }
 
   if (debouncedQuery.trim().length < 2) {
-    return 'Tapez au moins 2 caracteres.';
+    return 'Tapez au moins 2 caractères.';
   }
 
   return undefined;
 }
 
 export function SearchPage() {
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = normalizeSearchQuery(searchParams.get('q'));
   const debouncedQuery = useDebouncedValue(query, 350);
   const search = useTmdbMediaSearch(debouncedQuery);
   const libraryIndex = useLibraryIndex();
   const libraryActions = useLibraryMediaActions();
   const message = getSearchMessage(query, debouncedQuery);
+
+  function updateQuery(nextQuery: string) {
+    setSearchParams(createSearchParamsForQuery(nextQuery), { replace: true });
+  }
 
   function handleSetStatus(media: CatalogMedia, status: LibraryStatus) {
     libraryActions.setStatusForMedia(media, status);
@@ -42,25 +48,25 @@ export function SearchPage() {
     <div className="space-y-6">
       <header className="space-y-4 pt-2">
         <div>
-          <p className="text-sm font-semibold text-viki-soft">Recherche</p>
+          <p className="text-sm font-semibold text-brand-soft">Recherche</p>
           <h1 className="mt-1 text-3xl font-black text-white">Trouver un titre</h1>
         </div>
         <form
-          className="group flex min-h-14 items-center gap-3 rounded-[1.35rem] bg-white/[0.075] px-4 shadow-[0_18px_45px_rgba(0,0,0,0.26)] transition focus-within:bg-white/[0.10] focus-within:shadow-[0_0_0_2px_rgba(255,79,135,0.45)]"
+          className="group flex min-h-14 items-center gap-3 rounded-[1.35rem] bg-white/[0.075] px-4 shadow-[0_18px_45px_rgba(0,0,0,0.26)] transition focus-within:bg-white/[0.10] focus-within:shadow-[0_0_0_2px_rgba(89,183,255,0.42)]"
           onSubmit={(event) => event.preventDefault()}
         >
-          <Search aria-hidden="true" className="size-5 shrink-0 text-viki-soft" />
+          <Search aria-hidden="true" className="size-5 shrink-0 text-brand-soft" />
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => updateQuery(event.target.value)}
             aria-label="Recherche"
-            placeholder="Nom d'un drama, film ou serie"
+            placeholder="Nom d'un drama, film ou série"
             className="min-w-0 flex-1 bg-transparent text-base text-white placeholder:text-subtle outline-none"
           />
           {query ? (
             <button
               type="button"
-              onClick={() => setQuery('')}
+              onClick={() => updateQuery('')}
               className="pressable focus-ring flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white/10 hover:text-white"
               aria-label="Effacer la recherche"
             >
@@ -96,13 +102,13 @@ export function SearchPage() {
 
       {search.error ? (
         <div className="rounded-[1.35rem] bg-danger/12 px-5 py-4 text-sm leading-6 text-red-100">
-          Impossible de charger les resultats TMDB pour le moment.
+          Impossible de charger les résultats TMDB pour le moment.
         </div>
       ) : null}
 
       {search.data && search.data.results.length === 0 ? (
         <div className="rounded-[1.35rem] bg-white/[0.055] px-5 py-8 text-center">
-          <p className="text-sm font-medium text-muted">Aucun film ou serie trouve.</p>
+          <p className="text-sm font-medium text-muted">Aucun film ou série trouvé.</p>
         </div>
       ) : null}
 

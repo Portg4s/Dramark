@@ -10,7 +10,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh bg-app text-ink antialiased">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_20%_-10%,rgba(255,79,135,0.20),transparent_24rem),radial-gradient(circle_at_92%_8%,rgba(113,215,255,0.10),transparent_22rem),linear-gradient(180deg,#0c1020_0%,#070912_46%,#04050b_100%)]" />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_20%_-10%,rgba(89,183,255,0.16),transparent_24rem),radial-gradient(circle_at_92%_8%,rgba(113,215,255,0.10),transparent_22rem),linear-gradient(180deg,#0c1020_0%,#070912_46%,#04050b_100%)]" />
       <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col">
         <OfflineBanner />
         <main

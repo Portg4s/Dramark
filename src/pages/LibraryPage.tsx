@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { ActionMenu } from '@/components/ui/ActionMenu';
 import {
   mapLibraryEntryToCatalogMedia,
   useLibraryCounts,
@@ -12,21 +13,21 @@ import { sortLibraryEntries, type LibrarySort } from '@/features/library/sorting
 import type { LibraryStatus } from '@/types/media';
 
 const tabs = [
-  { status: 'watchlist', label: 'A regarder' },
+  { status: 'watchlist', label: 'À regarder' },
   { status: 'watched', label: 'Vu' }
 ] as const;
 
 const sortOptions = [
-  { value: 'recent', label: 'Ajout recent' },
+  { value: 'recent', label: 'Ajout récent' },
   { value: 'title', label: 'Titre A-Z' },
-  { value: 'year', label: 'Annee' },
+  { value: 'year', label: 'Année' },
   { value: 'rating', label: 'Note TMDB' }
 ] as const;
 
 function getEmptyMessage(status: LibraryStatus): string {
   return status === 'watchlist'
     ? 'Ajoutez votre prochain drama depuis la recherche.'
-    : 'Les films et series que vous terminez apparaitront ici.';
+    : 'Les films et séries que vous terminez apparaîtront ici.';
 }
 
 export function LibraryPage() {
@@ -41,16 +42,17 @@ export function LibraryPage() {
     [entries.data, sort]
   );
   const activeIndex = activeStatus === 'watchlist' ? 0 : 1;
+  const selectedSort = sortOptions.find((option) => option.value === sort) ?? sortOptions[0];
 
   return (
     <div className="space-y-6">
       <header className="space-y-4 pt-2">
         <div>
-          <p className="text-sm font-semibold text-viki-soft">Collection</p>
+          <p className="text-sm font-semibold text-brand-soft">Collection</p>
           <h1 className="mt-1 text-3xl font-black text-white">Ma liste</h1>
         </div>
         <p className="text-sm font-medium text-muted">
-          {counts.watchlist} a regarder <span className="px-2 text-subtle">·</span> {counts.watched}{' '}
+          {counts.watchlist} à regarder <span className="px-2 text-subtle">·</span> {counts.watched}{' '}
           vus
         </p>
       </header>
@@ -58,7 +60,7 @@ export function LibraryPage() {
       <div className="relative grid grid-cols-2 rounded-full bg-white/[0.07] p-1">
         <span
           aria-hidden="true"
-          className="absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-full bg-viki shadow-[0_10px_24px_rgba(255,79,135,0.25)] transition-transform duration-300 ease-[var(--ease-dramark)]"
+          className="absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-full bg-brand shadow-[0_10px_24px_rgba(89,183,255,0.23)] transition-transform duration-300 ease-[var(--ease-dramark)]"
           style={{ transform: `translateX(${activeIndex * 100}%)` }}
         />
         {tabs.map(({ status, label }) => {
@@ -84,24 +86,31 @@ export function LibraryPage() {
       </div>
 
       <div className="flex justify-end">
-        <label className="relative inline-flex items-center">
-          <span className="sr-only">Trier la liste</span>
-          <select
-            value={sort}
-            onChange={(event) => setSort(event.target.value as LibrarySort)}
-            className="focus-ring min-h-11 appearance-none rounded-full bg-white/[0.075] py-0 pl-4 pr-10 text-sm font-semibold text-white outline-none"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            aria-hidden="true"
-            className="pointer-events-none absolute right-3 size-4 text-subtle"
-          />
-        </label>
+        <ActionMenu
+          label="Trier la liste"
+          side="bottom"
+          items={sortOptions.map((option) => ({
+            label: option.label,
+            selected: option.value === sort,
+            onSelect: () => setSort(option.value)
+          }))}
+          trigger={({ ref, isOpen, toggle }) => (
+            <button
+              ref={ref}
+              type="button"
+              onClick={toggle}
+              aria-haspopup="menu"
+              aria-expanded={isOpen}
+              className="pressable focus-ring inline-flex min-h-11 items-center gap-2 rounded-full bg-white/[0.075] px-4 text-sm font-semibold text-white hover:bg-white/[0.11]"
+            >
+              {selectedSort.label}
+              <ChevronDown
+                aria-hidden="true"
+                className={['size-4 text-subtle transition', isOpen ? 'rotate-180' : ''].join(' ')}
+              />
+            </button>
+          )}
+        />
       </div>
 
       {entries.isLoading ? (
@@ -115,7 +124,7 @@ export function LibraryPage() {
 
       {entries.error ? (
         <div className="rounded-[1.35rem] bg-danger/12 px-5 py-4 text-sm text-red-100">
-          Impossible de lire la bibliotheque locale pour le moment.
+          Impossible de lire la bibliothèque locale pour le moment.
         </div>
       ) : null}
 

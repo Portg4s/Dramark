@@ -1,6 +1,7 @@
 export type TmdbPosterSize = 'w185' | 'w342' | 'w500';
 export type TmdbBackdropSize = 'w780' | 'w1280';
-export type TmdbImageSize = TmdbPosterSize | TmdbBackdropSize;
+export type TmdbLogoSize = 'w300' | 'w500';
+export type TmdbImageSize = TmdbPosterSize | TmdbBackdropSize | TmdbLogoSize;
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 

@@ -4,15 +4,16 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { MediaPoster } from '@/components/ui/MediaPoster';
 import type { CatalogMedia, MediaDetails } from '@/features/catalog/types';
 import { useLibraryIndex, useLibraryMediaActions } from '@/features/library/hooks';
-import { parseMediaDetailParams } from '@/features/media/route';
 import { useMediaDetails } from '@/features/media/hooks';
-import { getTmdbImageUrl } from '@/services/tmdb/images';
+import { parseMediaDetailParams } from '@/features/media/route';
 import { tmdbRuntimeConfig } from '@/services/tmdb/config';
+import { getTmdbImageUrl } from '@/services/tmdb/images';
 import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
+import { formatCountryName, formatLanguageName } from '@/utils/displayNames';
 import { createMediaKey } from '@/utils/mediaKey';
 
 function getMediaLabel(mediaType: CatalogMedia['mediaType']): string {
-  return mediaType === 'movie' ? 'Film' : 'Serie';
+  return mediaType === 'movie' ? 'Film' : 'Série';
 }
 
 function formatRuntime(minutes: number | undefined): string | undefined {
@@ -30,20 +31,71 @@ function formatRuntime(minutes: number | undefined): string | undefined {
   return rest ? `${hours} h ${rest}` : `${hours} h`;
 }
 
+function formatDate(date: string | undefined): string | undefined {
+  if (!date) {
+    return undefined;
+  }
+
+  return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(date));
+}
+
+function translateTvStatus(status: string | undefined): string | undefined {
+  const statusMap: Record<string, string> = {
+    Ended: 'Terminée',
+    Returning: 'En diffusion',
+    'Returning Series': 'En diffusion',
+    Planned: 'Prévue',
+    Pilot: 'Pilote',
+    Canceled: 'Annulée',
+    Cancelled: 'Annulée',
+    'In Production': 'En production'
+  };
+
+  return status ? (statusMap[status] ?? status) : undefined;
+}
+
 function buildInfoLine(details: MediaDetails): string[] {
+  const countryName = formatCountryName(details.originCountries[0]);
   const values = [
     details.releaseYear ? String(details.releaseYear) : undefined,
-    details.originCountries[0],
+    countryName,
     details.mediaType === 'movie' ? formatRuntime(details.runtimeMinutes) : undefined,
     details.mediaType === 'tv' && details.episodesCount
-      ? `${details.episodesCount} episodes`
+      ? `${details.episodesCount} épisodes`
       : undefined,
     details.mediaType === 'tv' && details.seasonsCount
       ? `${details.seasonsCount} saison${details.seasonsCount > 1 ? 's' : ''}`
+      : undefined,
+    details.mediaType === 'tv' && details.episodeRuntimeMinutes
+      ? `~${details.episodeRuntimeMinutes} min / épisode`
       : undefined
   ];
 
   return values.filter((value): value is string => Boolean(value));
+}
+
+function buildBroadcastLine(details: MediaDetails): string | undefined {
+  if (details.mediaType !== 'tv') {
+    return undefined;
+  }
+
+  const first = formatDate(details.releaseDate);
+  const last = formatDate(details.lastAirDate);
+  const next = formatDate(details.nextAirDate);
+
+  if (next) {
+    return `Prochaine diffusion : ${next}`;
+  }
+
+  if (first && last && first !== last) {
+    return `Diffusée du ${first} au ${last}`;
+  }
+
+  if (first) {
+    return `Première diffusion : ${first}`;
+  }
+
+  return undefined;
 }
 
 function ActionButton({
@@ -65,7 +117,7 @@ function ActionButton({
       className={[
         'pressable focus-ring flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full px-4 text-sm font-black disabled:cursor-not-allowed disabled:opacity-55',
         active
-          ? 'bg-viki text-white shadow-[0_16px_34px_rgba(255,79,135,0.32)]'
+          ? 'bg-brand text-white shadow-[0_16px_34px_rgba(89,183,255,0.30)]'
           : 'bg-white/10 text-white hover:bg-white/15'
       ].join(' ')}
     >
@@ -95,7 +147,7 @@ function PersonalActions({
           disabled={isBusy || entry?.status === 'watchlist'}
           onClick={() => onSetStatus(details, 'watchlist')}
         >
-          <Clock3 aria-hidden="true" className="size-4" />A regarder
+          <Clock3 aria-hidden="true" className="size-4" />À regarder
         </ActionButton>
         <ActionButton
           active={entry?.status === 'watched'}
@@ -199,9 +251,13 @@ export function MediaDetailPage() {
 
   const media = details.data;
   const backdropUrl = getTmdbImageUrl(media.backdropPath, 'w1280');
+  const logoUrl = getTmdbImageUrl(media.logoPath, 'w500');
   const entry = libraryIndex.data.get(createMediaKey(media));
   const Icon = media.mediaType === 'movie' ? Film : Tv;
   const infoLine = buildInfoLine(media);
+  const broadcastLine = buildBroadcastLine(media);
+  const statusLabel = translateTvStatus(media.status);
+  const languageName = formatLanguageName(media.originalLanguage);
 
   return (
     <article className="min-h-dvh pb-10">
@@ -242,17 +298,38 @@ export function MediaDetailPage() {
                 {getMediaLabel(media.mediaType)}
               </span>
               {media.voteAverage ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-viki-soft backdrop-blur">
+                <span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-brand-soft backdrop-blur">
                   <Star aria-hidden="true" className="size-3.5 fill-current" />
                   {media.voteAverage.toFixed(1)}
+                  {media.voteCount ? ` · ${media.voteCount.toLocaleString('fr-FR')} votes` : null}
                 </span>
               ) : null}
             </div>
-            <h1 className="text-2xl font-black leading-tight text-white sm:text-4xl">
+            {logoUrl ? (
+              <div className="mb-3">
+                <img
+                  src={logoUrl}
+                  alt=""
+                  className="max-h-20 max-w-[13rem] object-contain object-left drop-shadow-[0_8px_18px_rgba(0,0,0,0.45)]"
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+            ) : null}
+            <h1
+              className={
+                logoUrl ? 'sr-only' : 'text-2xl font-black leading-tight text-white sm:text-4xl'
+              }
+            >
               {media.title}
             </h1>
             {media.originalTitle ? (
               <p className="mt-1 line-clamp-2 text-sm text-muted">{media.originalTitle}</p>
+            ) : null}
+            {media.tagline ? (
+              <p className="mt-2 line-clamp-2 text-sm font-medium italic text-white/82">
+                {media.tagline}
+              </p>
             ) : null}
           </div>
         </div>
@@ -292,20 +369,41 @@ export function MediaDetailPage() {
           <h2 className="text-xl font-black text-white">Informations</h2>
           <div className="space-y-2 text-sm leading-6 text-muted">
             {media.mediaType === 'movie' && media.directors.length > 0 ? (
-              <p>Realisation : {media.directors.join(', ')}</p>
+              <p>Réalisation : {media.directors.join(', ')}</p>
             ) : null}
             {media.mediaType === 'tv' && media.creators.length > 0 ? (
-              <p>Creation : {media.creators.join(', ')}</p>
+              <p>Création : {media.creators.join(', ')}</p>
             ) : null}
             {media.mediaType === 'tv' && media.networks.length > 0 ? (
-              <p>Network : {media.networks.join(', ')}</p>
+              <p>Diffuseur : {media.networks.join(', ')}</p>
             ) : null}
-            {media.originalLanguage ? (
-              <p>Langue originale : {media.originalLanguage.toUpperCase()}</p>
-            ) : null}
-            {media.voteCount ? <p>{media.voteCount.toLocaleString('fr-FR')} votes TMDB</p> : null}
+            {statusLabel ? <p>Statut : {statusLabel}</p> : null}
+            {broadcastLine ? <p>{broadcastLine}</p> : null}
+            {languageName ? <p>Langue originale : {languageName}</p> : null}
           </div>
         </section>
+
+        {media.galleryBackdropPaths.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-xl font-black text-white">Galerie</h2>
+            <div className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6">
+              {media.galleryBackdropPaths.slice(0, 6).map((path) => {
+                const imageUrl = getTmdbImageUrl(path, 'w780');
+
+                return imageUrl ? (
+                  <img
+                    key={path}
+                    src={imageUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-video w-64 shrink-0 rounded-[1rem] object-cover shadow-poster"
+                  />
+                ) : null;
+              })}
+            </div>
+          </section>
+        ) : null}
 
         {media.cast.length > 0 ? (
           <section className="space-y-3">

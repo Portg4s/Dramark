@@ -12,7 +12,7 @@ const navItems: NavigationItem[] = [
   { to: '/', label: 'Accueil', icon: Home, end: true },
   { to: '/recherche', label: 'Recherche', icon: Search },
   { to: '/liste', label: 'Ma liste', icon: Library },
-  { to: '/reglages', label: 'Reglages', icon: Settings }
+  { to: '/reglages', label: 'Réglages', icon: Settings }
 ] as const;
 
 export function BottomNavigation() {
@@ -37,16 +37,11 @@ export function BottomNavigation() {
             {({ isActive }) => (
               <>
                 <span
-                  aria-hidden="true"
-                  className={[
-                    'absolute inset-x-4 top-1 h-0.5 rounded-full bg-viki transition duration-200',
-                    isActive ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
-                  ].join(' ')}
-                />
-                <span
                   className={[
                     'flex size-8 items-center justify-center rounded-full transition duration-200',
-                    isActive ? 'bg-white/10 text-viki-soft' : 'text-subtle'
+                    isActive
+                      ? 'bg-brand/14 text-brand-soft shadow-[0_0_18px_rgba(89,183,255,0.18)]'
+                      : 'text-subtle'
                   ].join(' ')}
                 >
                   <Icon aria-hidden="true" size={20} strokeWidth={2.15} />

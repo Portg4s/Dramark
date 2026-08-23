@@ -23,7 +23,7 @@ export function OfflineBanner() {
   }
 
   return (
-    <div className="sticky top-0 z-30 flex items-center justify-center gap-2 bg-viki px-4 py-2 text-sm font-semibold text-white">
+    <div className="sticky top-0 z-30 flex items-center justify-center gap-2 bg-brand px-4 py-2 text-sm font-semibold text-white">
       <WifiOff aria-hidden="true" size={16} />
       Mode hors connexion
     </div>

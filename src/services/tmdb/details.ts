@@ -14,14 +14,16 @@ export async function getMediaDetails(
 ): Promise<MediaDetails> {
   if (mediaType === 'movie') {
     const response = await client.request<TmdbMovieDetailsResponse>(`/movie/${tmdbId}`, {
-      append_to_response: 'credits'
+      append_to_response: 'credits,images',
+      include_image_language: 'fr,en,null'
     });
 
     return mapTmdbMovieDetailsToMediaDetails(response);
   }
 
   const response = await client.request<TmdbTvDetailsResponse>(`/tv/${tmdbId}`, {
-    append_to_response: 'aggregate_credits,credits'
+    append_to_response: 'aggregate_credits,images',
+    include_image_language: 'fr,en,null'
   });
 
   return mapTmdbTvDetailsToMediaDetails(response);

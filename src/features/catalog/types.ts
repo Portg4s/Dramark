@@ -31,6 +31,9 @@ export type MediaCastMember = {
 };
 
 export type MediaDetails = CatalogMedia & {
+  tagline?: string;
+  logoPath?: string;
+  galleryBackdropPaths: string[];
   genres: string[];
   voteCount?: number;
   cast: MediaCastMember[];
@@ -42,4 +45,6 @@ export type MediaDetails = CatalogMedia & {
   status?: string;
   creators: string[];
   networks: string[];
+  lastAirDate?: string;
+  nextAirDate?: string;
 };
