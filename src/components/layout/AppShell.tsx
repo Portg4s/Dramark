@@ -1,6 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 
 import { BottomNavigation } from '@/components/layout/BottomNavigation';
+import { BrandSplash } from '@/components/layout/BrandSplash';
 import { ConfigurationNotice } from '@/components/system/ConfigurationNotice';
 import { OfflineBanner } from '@/components/system/OfflineBanner';
 
@@ -10,7 +11,8 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh bg-app text-ink antialiased">
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_20%_-10%,rgba(89,183,255,0.16),transparent_24rem),radial-gradient(circle_at_92%_8%,rgba(113,215,255,0.10),transparent_22rem),linear-gradient(180deg,#0c1020_0%,#070912_46%,#04050b_100%)]" />
+      <BrandSplash />
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-8%,rgba(89,183,255,0.18),transparent_24rem),radial-gradient(circle_at_92%_8%,rgba(120,92,255,0.09),transparent_21rem),radial-gradient(circle_at_8%_82%,rgba(113,215,255,0.08),transparent_18rem),linear-gradient(180deg,#0b1020_0%,#070912_46%,#04050b_100%)]" />
       <div className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col">
         <OfflineBanner />
         <main

@@ -9,29 +9,36 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icons/dramark.svg'],
+      includeAssets: ['brand/favicon-16.png', 'brand/favicon-32.png', 'brand/apple-touch-icon.png'],
       manifest: {
         name: 'Dramark',
         short_name: 'Dramark',
-        description: 'Suivi personnel des contenus Rakuten Viki disponibles en France.',
+        description: 'Bibliothèque personnelle pour suivre les films et séries repérés sur Viki.',
         lang: 'fr-FR',
         start_url: '/',
         scope: '/',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#08090f',
-        theme_color: '#08090f',
+        background_color: '#070912',
+        theme_color: '#070912',
         icons: [
           {
-            src: '/icons/dramark.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any maskable'
+            src: '/brand/dramark-app-icon.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/brand/dramark-pwa-maskable.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico}']
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico}'],
+        globIgnores: ['**/dramark-splash-*.png']
       }
     })
   ],

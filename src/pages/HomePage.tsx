@@ -1,6 +1,9 @@
 import { ArrowRight, Library, Search } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
+import homeBackground from '@/assets/brand/dramark-home-bg.jpg';
+import logoHorizontal from '@/assets/brand/dramark-logo-horizontal.png';
+import brandMark from '@/assets/brand/dramark-mark.png';
 import { MediaCard } from '@/features/catalog/MediaCard';
 import {
   mapLibraryEntryToCatalogMedia,
@@ -87,15 +90,31 @@ export function HomePage() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-5 pt-2">
-        <div>
-          <p className="text-sm font-semibold text-brand-soft">Votre bibliothèque</p>
-          <h1 className="mt-1 text-5xl font-black leading-none text-white sm:text-6xl">Dramark</h1>
+      <header className="relative -mx-4 -mt-[calc(1rem+env(safe-area-inset-top))] overflow-hidden px-4 pb-8 pt-[calc(2.25rem+env(safe-area-inset-top))] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <img
+          src={homeBackground}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-[50%_26%] opacity-[0.58]"
+          loading="eager"
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(89,183,255,0.18),transparent_17rem),radial-gradient(circle_at_72%_18%,rgba(160,94,255,0.12),transparent_14rem),linear-gradient(180deg,rgba(7,9,18,0.18)_0%,rgba(7,9,18,0.72)_62%,#070912_100%)]" />
+        <div className="relative mx-auto flex max-w-xl flex-col items-center text-center">
+          <p className="text-xs font-semibold tracking-[0.18em] text-brand-soft/90">
+            Votre bibliothèque
+          </p>
+          <img
+            src={logoHorizontal}
+            alt="Dramark"
+            className="mt-4 h-auto w-[min(17rem,78vw)] drop-shadow-[0_0_30px_rgba(89,183,255,0.25)] sm:w-80"
+            loading="eager"
+            decoding="async"
+          />
+          <p className="mt-4 rounded-full bg-black/24 px-4 py-2 text-sm font-semibold text-white/88 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+            {counts.watched} vus <span className="px-2 text-brand-soft/75">·</span>{' '}
+            {counts.watchlist} à regarder
+          </p>
         </div>
-        <p className="max-w-xl text-sm leading-6 text-muted">
-          {counts.watched} vus <span className="px-2 text-subtle">·</span> {counts.watchlist} à
-          regarder
-        </p>
       </header>
 
       {hasEntries ? (
@@ -116,6 +135,13 @@ export function HomePage() {
           <div
             aria-hidden="true"
             className="absolute -right-16 -top-20 size-48 rounded-full bg-brand/18 blur-3xl"
+          />
+          <img
+            src={brandMark}
+            alt=""
+            className="absolute -right-8 bottom-0 size-36 opacity-[0.08]"
+            loading="lazy"
+            decoding="async"
           />
           <div className="relative space-y-4">
             <h2 className="max-w-sm text-2xl font-black leading-tight text-white">
