@@ -34,6 +34,15 @@ Statut : termine
 - Actions immediates `A regarder`, `Vu` et `Retirer`.
 - Bibliotheque locale IndexedDB avec deux vues, compteurs et tris simples.
 
+## Phase 2.5 — Visual overhaul + Media Detail
+
+Statut : termine
+
+- Refonte visuelle mobile premium des ecrans existants.
+- Navigation basse translucide et fiche media immersive.
+- Details TMDB films/series avec synopsis, infos utiles et casting.
+- Actions bibliotheque reutilisees depuis recherche, liste et fiche.
+
 ## Phase 3 — Decouverte / accueil
 
 Statut : a faire
@@ -42,13 +51,12 @@ Statut : a faire
 - Rails ou suggestions utiles pour alimenter la recherche et la bibliotheque.
 - Etats loading/erreur/empty adaptes.
 
-## Phase 4 — Fiches detaillees
+## Phase 4 — Enrichissement fiches
 
 Statut : a faire
 
-- Page media detaillee.
-- Cast, genres, notes TMDB, episodes series si pertinent.
-- Actions bibliotheque depuis la fiche.
+- Completer les fiches si necessaire : genres avances, saisons utiles, rafraichissement metadata.
+- Ameliorer les transitions visuelles entre listes et fiche.
 
 ## Phase 5 — Import / Export
 

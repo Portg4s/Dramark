@@ -1,15 +1,19 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-app: #08090f;
-  --color-surface: rgba(255, 255, 255, 0.075);
+  --color-app: #070912;
+  --color-ink: #f7f2f5;
+  --color-surface: rgba(19, 24, 39, 0.7);
+  --color-surface-soft: rgba(255, 255, 255, 0.08);
   --color-viki: #ff4f87;
   --color-viki-soft: #ff9ab8;
-  --color-muted: #b6bdca;
-  --color-subtle: #7f8797;
-  --shadow-panel: 0 18px 42px rgba(0, 0, 0, 0.32);
-  --shadow-poster: 0 18px 30px rgba(0, 0, 0, 0.38);
-  --shadow-nav: 0 -16px 40px rgba(0, 0, 0, 0.4);
+  --color-cyan-soft: #71d7ff;
+  --color-danger: #ff6b7a;
+  --color-muted: #b8c0cf;
+  --color-subtle: #7f8aa0;
+  --shadow-panel: 0 22px 60px rgba(0, 0, 0, 0.38);
+  --shadow-poster: 0 18px 38px rgba(0, 0, 0, 0.5);
+  --shadow-nav: 0 -18px 46px rgba(0, 0, 0, 0.54);
   --font-sans:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -17,7 +21,11 @@
 :root {
   color-scheme: dark;
   font-family: var(--font-sans);
-  background: #08090f;
+  background: #070912;
+  --ease-dramark: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-fast: 160ms;
+  --motion-base: 220ms;
+  --motion-page: 320ms;
 }
 
 * {
@@ -26,22 +34,33 @@
 
 html {
   min-height: 100%;
-  background: #08090f;
+  background: #070912;
 }
 
 body {
   min-height: 100%;
   margin: 0;
-  background: #08090f;
+  background:
+    radial-gradient(circle at 16% -10%, rgba(255, 79, 135, 0.2), transparent 22rem),
+    radial-gradient(circle at 94% 10%, rgba(113, 215, 255, 0.11), transparent 20rem),
+    linear-gradient(180deg, #0c1020 0%, #070912 48%, #04050b 100%);
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
-button {
+button,
+a {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+button:not(:disabled),
+a[href] {
+  cursor: pointer;
 }
 
 ::selection {
@@ -58,4 +77,68 @@ button {
 
 .poster-card {
   contain: content;
+}
+
+.page-enter {
+  animation: page-enter var(--motion-page) var(--ease-dramark) both;
+}
+
+.media-enter {
+  animation: media-enter 260ms var(--ease-dramark) both;
+}
+
+.pressable {
+  transition:
+    transform var(--motion-fast) var(--ease-dramark),
+    opacity var(--motion-fast) var(--ease-dramark),
+    background-color var(--motion-base) var(--ease-dramark),
+    color var(--motion-base) var(--ease-dramark),
+    box-shadow var(--motion-base) var(--ease-dramark);
+}
+
+.pressable:active {
+  transform: scale(0.98);
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  box-shadow:
+    0 0 0 2px #070912,
+    0 0 0 4px rgba(255, 79, 135, 0.95);
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes media-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

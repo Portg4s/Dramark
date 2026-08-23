@@ -1,20 +1,14 @@
 import { Search, X } from 'lucide-react';
 import { useState } from 'react';
 
-import { PageHeader } from '@/components/ui/PageHeader';
-import {
-  useLibraryIndex,
-  useRemoveLibraryEntry,
-  useSetLibraryStatus,
-  createSnapshotFromCatalogMedia
-} from '@/features/library/hooks';
+import type { CatalogMedia } from '@/features/catalog/types';
+import { useLibraryIndex, useLibraryMediaActions } from '@/features/library/hooks';
 import { LibraryMediaItem } from '@/features/library/LibraryMediaItem';
 import { useTmdbMediaSearch } from '@/features/search/hooks';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { tmdbRuntimeConfig } from '@/services/tmdb/config';
 import type { LibraryStatus } from '@/types/media';
 import { createMediaKey } from '@/utils/mediaKey';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import type { CatalogMedia } from '@/features/catalog/types';
 
 function getSearchMessage(query: string, debouncedQuery: string): string | undefined {
   if (!tmdbRuntimeConfig.isConfigured) {
@@ -22,7 +16,7 @@ function getSearchMessage(query: string, debouncedQuery: string): string | undef
   }
 
   if (query.trim().length === 0) {
-    return 'Saisissez un titre de film ou de serie.';
+    return 'Recherchez le titre que vous venez de reperer.';
   }
 
   if (debouncedQuery.trim().length < 2) {
@@ -37,79 +31,77 @@ export function SearchPage() {
   const debouncedQuery = useDebouncedValue(query, 350);
   const search = useTmdbMediaSearch(debouncedQuery);
   const libraryIndex = useLibraryIndex();
-  const setStatus = useSetLibraryStatus();
-  const removeEntry = useRemoveLibraryEntry();
+  const libraryActions = useLibraryMediaActions();
   const message = getSearchMessage(query, debouncedQuery);
-  const isMutating = setStatus.isPending || removeEntry.isPending;
 
   function handleSetStatus(media: CatalogMedia, status: LibraryStatus) {
-    setStatus.mutate({
-      mediaType: media.mediaType,
-      tmdbId: media.tmdbId,
-      status,
-      snapshot: createSnapshotFromCatalogMedia(media)
-    });
-  }
-
-  function handleRemove(media: CatalogMedia) {
-    removeEntry.mutate({ mediaType: media.mediaType, tmdbId: media.tmdbId });
+    libraryActions.setStatusForMedia(media, status);
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Recherche"
-        title="Trouver un titre"
-        description="Recherchez films et series dans TMDB, puis classez-les dans votre bibliotheque locale."
-      />
-
-      <form
-        className="flex min-h-14 items-center gap-3 rounded-lg border border-white/10 bg-surface px-4 shadow-panel focus-within:ring-2 focus-within:ring-viki"
-        onSubmit={(event) => event.preventDefault()}
-      >
-        <Search aria-hidden="true" className="size-5 shrink-0 text-muted" />
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          aria-label="Recherche"
-          placeholder="Nom d'un drama, film ou serie"
-          className="min-w-0 flex-1 bg-transparent text-base text-white placeholder:text-muted outline-none"
-        />
-        {query ? (
-          <button
-            type="button"
-            onClick={() => setQuery('')}
-            className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted transition hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-viki"
-            aria-label="Effacer la recherche"
-          >
-            <X aria-hidden="true" className="size-5" />
-          </button>
-        ) : null}
-      </form>
+      <header className="space-y-4 pt-2">
+        <div>
+          <p className="text-sm font-semibold text-viki-soft">Recherche</p>
+          <h1 className="mt-1 text-3xl font-black text-white">Trouver un titre</h1>
+        </div>
+        <form
+          className="group flex min-h-14 items-center gap-3 rounded-[1.35rem] bg-white/[0.075] px-4 shadow-[0_18px_45px_rgba(0,0,0,0.26)] transition focus-within:bg-white/[0.10] focus-within:shadow-[0_0_0_2px_rgba(255,79,135,0.45)]"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <Search aria-hidden="true" className="size-5 shrink-0 text-viki-soft" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            aria-label="Recherche"
+            placeholder="Nom d'un drama, film ou serie"
+            className="min-w-0 flex-1 bg-transparent text-base text-white placeholder:text-subtle outline-none"
+          />
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="pressable focus-ring flex size-10 shrink-0 items-center justify-center rounded-full text-muted hover:bg-white/10 hover:text-white"
+              aria-label="Effacer la recherche"
+            >
+              <X aria-hidden="true" className="size-5" />
+            </button>
+          ) : null}
+        </form>
+      </header>
 
       {message ? (
-        <div className="rounded-lg border border-white/10 bg-white/6 px-5 py-6 text-center text-sm font-medium text-muted">
+        <div className="rounded-[1.35rem] bg-white/[0.055] px-5 py-6 text-center text-sm font-medium leading-6 text-muted">
           {message}
         </div>
       ) : null}
 
       {search.isLoading ? (
-        <div
-          role="status"
-          className="rounded-lg border border-white/10 bg-surface px-5 py-6 text-sm text-muted"
-        >
-          Recherche en cours...
+        <div role="status" className="space-y-3">
+          {[0, 1, 2].map((item) => (
+            <div
+              key={item}
+              className="grid grid-cols-[5.6rem_1fr] gap-3 rounded-[1.35rem] bg-white/[0.055] p-2.5"
+            >
+              <div className="aspect-[2/3] animate-pulse rounded-[1.05rem] bg-white/10" />
+              <div className="space-y-3 py-3">
+                <div className="h-3 w-24 animate-pulse rounded-full bg-white/10" />
+                <div className="h-5 w-3/4 animate-pulse rounded-full bg-white/10" />
+                <div className="h-10 w-full animate-pulse rounded-full bg-white/10" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
 
       {search.error ? (
-        <div className="rounded-lg border border-red-300/20 bg-red-300/10 px-5 py-4 text-sm text-red-100">
+        <div className="rounded-[1.35rem] bg-danger/12 px-5 py-4 text-sm leading-6 text-red-100">
           Impossible de charger les resultats TMDB pour le moment.
         </div>
       ) : null}
 
       {search.data && search.data.results.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-white/14 bg-white/5 px-5 py-8 text-center">
+        <div className="rounded-[1.35rem] bg-white/[0.055] px-5 py-8 text-center">
           <p className="text-sm font-medium text-muted">Aucun film ou serie trouve.</p>
         </div>
       ) : null}
@@ -122,9 +114,9 @@ export function SearchPage() {
               media={media}
               mode="search"
               entry={libraryIndex.data.get(createMediaKey(media))}
-              isBusy={isMutating}
+              isBusy={libraryActions.isMutating}
               onSetStatus={handleSetStatus}
-              onRemove={handleRemove}
+              onRemove={libraryActions.removeMedia}
             />
           ))}
         </div>

@@ -22,3 +22,24 @@ export type CatalogPage = {
   totalResults: number;
   results: CatalogMedia[];
 };
+
+export type MediaCastMember = {
+  id: number;
+  name: string;
+  character?: string;
+  profilePath?: string;
+};
+
+export type MediaDetails = CatalogMedia & {
+  genres: string[];
+  voteCount?: number;
+  cast: MediaCastMember[];
+  runtimeMinutes?: number;
+  directors: string[];
+  seasonsCount?: number;
+  episodesCount?: number;
+  episodeRuntimeMinutes?: number;
+  status?: string;
+  creators: string[];
+  networks: string[];
+};

@@ -1,36 +1,45 @@
 import { Download, Info, Smartphone, Upload } from 'lucide-react';
 
-import { PageHeader } from '@/components/ui/PageHeader';
-
 const settingsItems = [
-  { label: 'Exporter mes donnees', icon: Download },
-  { label: 'Importer mes donnees', icon: Upload },
-  { label: 'Application PWA', icon: Smartphone },
-  { label: 'Credits et attributions', icon: Info }
+  { label: 'Exporter mes donnees', detail: 'Bientot disponible', icon: Download },
+  { label: 'Importer mes donnees', detail: 'Bientot disponible', icon: Upload },
+  { label: 'Application PWA', detail: 'Installation et mode hors ligne', icon: Smartphone },
+  { label: 'Credits et attributions', detail: 'TMDB', icon: Info }
 ] as const;
 
 export function SettingsPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader eyebrow="Reglages" title="Parametres" />
+    <div className="space-y-7">
+      <header className="space-y-2 pt-2">
+        <p className="text-sm font-semibold text-viki-soft">Reglages</p>
+        <h1 className="text-3xl font-black text-white">Parametres</h1>
+      </header>
 
-      <div className="overflow-hidden rounded-lg border border-white/10 bg-surface shadow-panel">
-        {settingsItems.map(({ label, icon: Icon }) => (
+      <div className="overflow-hidden rounded-[1.45rem] bg-white/[0.055] shadow-[0_16px_42px_rgba(0,0,0,0.24)]">
+        {settingsItems.map(({ label, detail, icon: Icon }) => (
           <button
             key={label}
             type="button"
             disabled
-            className="flex min-h-14 w-full items-center gap-3 border-b border-white/8 px-4 text-left text-sm font-medium text-muted last:border-b-0 disabled:cursor-not-allowed"
+            className="flex min-h-16 w-full items-center gap-3 px-4 text-left text-sm text-muted disabled:cursor-not-allowed disabled:opacity-75"
           >
-            <Icon aria-hidden="true" size={19} />
-            {label}
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/8 text-viki-soft">
+              <Icon aria-hidden="true" size={19} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-bold text-white">{label}</span>
+              <span className="mt-0.5 block text-xs text-subtle">{detail}</span>
+            </span>
           </button>
         ))}
       </div>
 
-      <p className="text-xs leading-6 text-subtle">
-        This product uses the TMDB API but is not endorsed or certified by TMDB.
-      </p>
+      <section className="rounded-[1.35rem] bg-white/[0.045] px-4 py-4">
+        <h2 className="text-sm font-bold text-white">Credits</h2>
+        <p className="mt-2 text-xs leading-6 text-subtle">
+          This product uses the TMDB API but is not endorsed or certified by TMDB.
+        </p>
+      </section>
     </div>
   );
 }

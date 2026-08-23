@@ -13,8 +13,9 @@ Next.js et les state managers globaux lourds sont exclus tant qu'aucun besoin se
 - `src/pages/` : pages routees.
 - `src/features/catalog/` : types media normalises, cartes et helpers de presentation reutilisables.
 - `src/features/search/` : hooks de recherche TMDB et query keys.
+- `src/features/media/` : route helpers et hooks de fiche detaillee.
 - `src/features/library/` : hooks, affichage et tris de bibliotheque.
-- `src/services/tmdb/` : configuration, client, recherche et mappers TMDB.
+- `src/services/tmdb/` : configuration, client, recherche, details et mappers TMDB.
 - `src/db/` : Dexie et repositories IndexedDB.
 - `src/types/` : types metier stables.
 - `src/utils/` : helpers petits et nommes.
@@ -27,8 +28,9 @@ Le code visuel ne doit pas contenir de logique reseau ou IndexedDB directe. Les 
 2. TanStack Query gere les appels TMDB, les lectures IndexedDB et les invalidations UI.
 3. `src/services/tmdb` encapsule l'API TMDB et transforme les reponses brutes vers le domaine.
 4. `src/features/search` expose la recherche multi TMDB, filtree aux films et series.
-5. `src/db` encapsule IndexedDB pour la bibliotheque personnelle.
-6. `src/features/library` orchestre les mutations `A regarder`, `Vu` et `Retirer` sans state manager global.
+5. `src/features/media` expose les fiches detaillees TMDB par `mediaType + tmdbId`.
+6. `src/db` encapsule IndexedDB pour la bibliotheque personnelle.
+7. `src/features/library` orchestre les mutations `A regarder`, `Vu` et `Retirer` sans state manager global.
 
 ## TMDB
 
@@ -39,7 +41,7 @@ L'acces direct navigateur a TMDB est accepte pour cette PWA personnelle initiale
 
 L'absence de token leve une erreur explicite et affiche un message de configuration comprehensible dans l'UI.
 
-La recherche active utilise `/search/multi`, ignore les personnes et ne verifie plus la disponibilite Rakuten Viki. TMDB fournit la recherche et les metadonnees, pas une garantie de catalogue Viki France.
+La recherche active utilise `/search/multi`, ignore les personnes et ne verifie plus la disponibilite Rakuten Viki. Les fiches media utilisent `/movie/{tmdbId}` et `/tv/{tmdbId}` avec `append_to_response` pour les credits utiles. TMDB fournit la recherche et les metadonnees, pas une garantie de catalogue Viki France.
 
 ## IndexedDB
 

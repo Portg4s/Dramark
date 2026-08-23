@@ -1,22 +1,19 @@
-import { CheckCircle2, Clock3 } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { PageHeader } from '@/components/ui/PageHeader';
-import type { CatalogMedia } from '@/features/catalog/types';
 import {
-  createSnapshotFromCatalogMedia,
+  mapLibraryEntryToCatalogMedia,
   useLibraryCounts,
   useLibraryEntries,
-  useRemoveLibraryEntry,
-  useSetLibraryStatus
+  useLibraryMediaActions
 } from '@/features/library/hooks';
 import { LibraryMediaItem } from '@/features/library/LibraryMediaItem';
 import { sortLibraryEntries, type LibrarySort } from '@/features/library/sorting';
-import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
+import type { LibraryStatus } from '@/types/media';
 
 const tabs = [
-  { status: 'watchlist', label: 'A regarder', icon: Clock3 },
-  { status: 'watched', label: 'Vu', icon: CheckCircle2 }
+  { status: 'watchlist', label: 'A regarder' },
+  { status: 'watched', label: 'Vu' }
 ] as const;
 
 const sortOptions = [
@@ -25,18 +22,6 @@ const sortOptions = [
   { value: 'year', label: 'Annee' },
   { value: 'rating', label: 'Note TMDB' }
 ] as const;
-
-function mapEntryToCatalogMedia(entry: LibraryEntryRecord): CatalogMedia {
-  return {
-    mediaType: entry.mediaType,
-    tmdbId: entry.tmdbId,
-    title: entry.snapshot?.title ?? 'Titre inconnu',
-    posterPath: entry.snapshot?.posterPath,
-    releaseYear: entry.snapshot?.releaseYear,
-    originCountries: entry.snapshot?.primaryCountry ? [entry.snapshot.primaryCountry] : [],
-    voteAverage: entry.snapshot?.voteAverage
-  };
-}
 
 function getEmptyMessage(status: LibraryStatus): string {
   return status === 'watchlist'
@@ -49,40 +34,36 @@ export function LibraryPage() {
   const [sort, setSort] = useState<LibrarySort>('recent');
   const entries = useLibraryEntries(activeStatus);
   const counts = useLibraryCounts();
-  const setStatus = useSetLibraryStatus();
-  const removeEntry = useRemoveLibraryEntry();
-  const isMutating = setStatus.isPending || removeEntry.isPending;
+  const libraryActions = useLibraryMediaActions();
 
   const sortedEntries = useMemo(
     () => sortLibraryEntries(entries.data ?? [], sort),
     [entries.data, sort]
   );
-
-  function handleSetStatus(media: CatalogMedia, status: LibraryStatus) {
-    setStatus.mutate({
-      mediaType: media.mediaType,
-      tmdbId: media.tmdbId,
-      status,
-      snapshot: createSnapshotFromCatalogMedia(media)
-    });
-  }
-
-  function handleRemove(media: CatalogMedia) {
-    removeEntry.mutate({ mediaType: media.mediaType, tmdbId: media.tmdbId });
-  }
+  const activeIndex = activeStatus === 'watchlist' ? 0 : 1;
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Ma liste"
-        title="Votre bibliotheque"
-        description="Deux listes locales sur cet appareil : ce que vous voulez regarder, et ce que vous avez deja vu."
-      />
+      <header className="space-y-4 pt-2">
+        <div>
+          <p className="text-sm font-semibold text-viki-soft">Collection</p>
+          <h1 className="mt-1 text-3xl font-black text-white">Ma liste</h1>
+        </div>
+        <p className="text-sm font-medium text-muted">
+          {counts.watchlist} a regarder <span className="px-2 text-subtle">·</span> {counts.watched}{' '}
+          vus
+        </p>
+      </header>
 
-      <div className="grid grid-cols-2 gap-2 rounded-lg bg-white/10 p-1">
-        {tabs.map(({ status, label, icon: Icon }) => {
-          const isActive = activeStatus === status;
+      <div className="relative grid grid-cols-2 rounded-full bg-white/[0.07] p-1">
+        <span
+          aria-hidden="true"
+          className="absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-full bg-viki shadow-[0_10px_24px_rgba(255,79,135,0.25)] transition-transform duration-300 ease-[var(--ease-dramark)]"
+          style={{ transform: `translateX(${activeIndex * 100}%)` }}
+        />
+        {tabs.map(({ status, label }) => {
           const count = status === 'watchlist' ? counts.watchlist : counts.watched;
+          const isActive = activeStatus === status;
 
           return (
             <button
@@ -90,50 +71,56 @@ export function LibraryPage() {
               type="button"
               onClick={() => setActiveStatus(status)}
               className={[
-                'flex min-h-12 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-viki',
-                isActive ? 'bg-viki text-white' : 'text-muted hover:bg-white/10 hover:text-white'
+                'focus-ring relative z-10 flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-bold transition duration-200',
+                isActive ? 'text-white' : 'text-muted hover:text-white'
               ].join(' ')}
+              aria-pressed={isActive}
             >
-              <Icon aria-hidden="true" size={18} />
               {label}
-              <span className="rounded-full bg-black/25 px-2 py-0.5 text-xs">{count}</span>
+              <span className={isActive ? 'text-white/82' : 'text-subtle'}>{count}</span>
             </button>
           );
         })}
       </div>
 
-      <label className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-surface px-4 py-3 text-sm text-muted shadow-panel">
-        <span className="font-semibold text-white">Tri</span>
-        <select
-          value={sort}
-          onChange={(event) => setSort(event.target.value as LibrarySort)}
-          className="min-h-10 rounded-md border border-white/10 bg-app px-3 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-viki"
-        >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="flex justify-end">
+        <label className="relative inline-flex items-center">
+          <span className="sr-only">Trier la liste</span>
+          <select
+            value={sort}
+            onChange={(event) => setSort(event.target.value as LibrarySort)}
+            className="focus-ring min-h-11 appearance-none rounded-full bg-white/[0.075] py-0 pl-4 pr-10 text-sm font-semibold text-white outline-none"
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            aria-hidden="true"
+            className="pointer-events-none absolute right-3 size-4 text-subtle"
+          />
+        </label>
+      </div>
 
       {entries.isLoading ? (
         <div
           role="status"
-          className="rounded-lg border border-white/10 bg-surface px-5 py-6 text-sm text-muted"
+          className="rounded-[1.35rem] bg-white/[0.055] px-5 py-6 text-sm text-muted"
         >
           Chargement de votre liste...
         </div>
       ) : null}
 
       {entries.error ? (
-        <div className="rounded-lg border border-red-300/20 bg-red-300/10 px-5 py-4 text-sm text-red-100">
+        <div className="rounded-[1.35rem] bg-danger/12 px-5 py-4 text-sm text-red-100">
           Impossible de lire la bibliotheque locale pour le moment.
         </div>
       ) : null}
 
       {!entries.isLoading && !entries.error && sortedEntries.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-white/14 bg-white/5 px-5 py-8 text-center">
+        <div className="rounded-[1.35rem] bg-white/[0.055] px-5 py-8 text-center">
           <p className="text-sm font-medium text-muted">{getEmptyMessage(activeStatus)}</p>
         </div>
       ) : null}
@@ -141,7 +128,7 @@ export function LibraryPage() {
       {sortedEntries.length > 0 ? (
         <div className="space-y-3">
           {sortedEntries.map((entry) => {
-            const media = mapEntryToCatalogMedia(entry);
+            const media = mapLibraryEntryToCatalogMedia(entry);
 
             return (
               <LibraryMediaItem
@@ -149,9 +136,9 @@ export function LibraryPage() {
                 media={media}
                 entry={entry}
                 mode="library"
-                isBusy={isMutating}
-                onSetStatus={handleSetStatus}
-                onRemove={handleRemove}
+                isBusy={libraryActions.isMutating}
+                onSetStatus={libraryActions.setStatusForMedia}
+                onRemove={libraryActions.removeMedia}
               />
             );
           })}

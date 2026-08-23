@@ -1,74 +1,54 @@
-import { AlertTriangle, Clapperboard, Film, Tv } from 'lucide-react';
-import { useState } from 'react';
+import { Film, Tv } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
+import { MediaPoster } from '@/components/ui/MediaPoster';
 import type { CatalogMedia } from '@/features/catalog/types';
-import { getTmdbImageUrl } from '@/services/tmdb/images';
+import { createMediaDetailPath } from '@/features/media/route';
+import type { LibraryEntryRecord } from '@/types/media';
 
 type MediaCardProps = {
   media: CatalogMedia;
+  entry?: LibraryEntryRecord;
 };
 
 function getMediaLabel(mediaType: CatalogMedia['mediaType']): string {
   return mediaType === 'movie' ? 'Film' : 'Serie';
 }
 
-export function MediaCard({ media }: MediaCardProps) {
-  const [imageState, setImageState] = useState<'loading' | 'loaded' | 'error'>('loading');
-  const posterUrl = getTmdbImageUrl(media.posterPath, 'w342');
-  const shouldShowPoster = posterUrl && imageState !== 'error';
+function getStatusLabel(entry: LibraryEntryRecord | undefined): string | undefined {
+  if (!entry) {
+    return undefined;
+  }
+
+  return entry.status === 'watchlist' ? 'A regarder' : 'Vu';
+}
+
+export function MediaCard({ media, entry }: MediaCardProps) {
   const Icon = media.mediaType === 'movie' ? Film : Tv;
+  const statusLabel = getStatusLabel(entry);
 
   return (
-    <article className="group w-36 shrink-0 sm:w-40 lg:w-auto">
-      <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-white/10 bg-white/10 shadow-poster">
-        {shouldShowPoster ? (
-          <img
-            src={posterUrl}
-            alt={`Affiche de ${media.title}`}
-            loading="lazy"
-            decoding="async"
-            className={[
-              'h-full w-full object-cover transition duration-300',
-              imageState === 'loaded' ? 'opacity-100' : 'opacity-0'
-            ].join(' ')}
-            onLoad={() => setImageState('loaded')}
-            onError={() => setImageState('error')}
-          />
-        ) : null}
-
-        {imageState === 'loading' && posterUrl ? (
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/18 via-white/8 to-transparent"
-          />
-        ) : null}
-
-        {!shouldShowPoster ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[linear-gradient(145deg,rgba(255,79,135,0.22),rgba(91,141,239,0.14),rgba(255,255,255,0.06))] p-4 text-center">
-            {imageState === 'error' ? (
-              <AlertTriangle aria-hidden="true" className="size-7 text-viki-soft" />
-            ) : (
-              <Clapperboard aria-hidden="true" className="size-8 text-viki-soft" />
-            )}
-            <span className="line-clamp-3 text-xs font-semibold leading-5 text-white">
-              {media.title}
-            </span>
-          </div>
-        ) : null}
-
-        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/62 px-2 py-1 text-[0.65rem] font-bold text-white backdrop-blur">
-          <Icon aria-hidden="true" className="size-3" />
-          {getMediaLabel(media.mediaType)}
-        </div>
-      </div>
-
-      <div className="mt-2 min-h-12">
+    <NavLink
+      to={createMediaDetailPath(media.mediaType, media.tmdbId)}
+      className="group block w-32 shrink-0 outline-none sm:w-36"
+      aria-label={`Ouvrir la fiche de ${media.title}`}
+    >
+      <MediaPoster
+        title={media.title}
+        posterPath={media.posterPath}
+        className="transition duration-300 group-hover:scale-[1.025] group-focus-visible:ring-2 group-focus-visible:ring-viki group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-app"
+      />
+      <div className="mt-2 min-h-14">
         <h3 className="line-clamp-2 text-sm font-semibold leading-5 text-white">{media.title}</h3>
-        <div className="mt-1 flex items-center gap-2 text-xs font-medium text-subtle">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[0.72rem] font-medium text-subtle">
+          <span className="inline-flex items-center gap-1 text-muted">
+            <Icon aria-hidden="true" className="size-3" />
+            {getMediaLabel(media.mediaType)}
+          </span>
           {media.releaseYear ? <span>{media.releaseYear}</span> : null}
-          {media.originCountries[0] ? <span>{media.originCountries[0]}</span> : null}
+          {statusLabel ? <span className="text-viki-soft">{statusLabel}</span> : null}
         </div>
       </div>
-    </article>
+    </NavLink>
   );
 }

@@ -31,6 +31,18 @@ export function createSnapshotFromCatalogMedia(media: CatalogMedia): LocalMediaS
   };
 }
 
+export function mapLibraryEntryToCatalogMedia(entry: LibraryEntryRecord): CatalogMedia {
+  return {
+    mediaType: entry.mediaType,
+    tmdbId: entry.tmdbId,
+    title: entry.snapshot?.title ?? 'Titre inconnu',
+    posterPath: entry.snapshot?.posterPath,
+    releaseYear: entry.snapshot?.releaseYear,
+    originCountries: entry.snapshot?.primaryCountry ? [entry.snapshot.primaryCountry] : [],
+    voteAverage: entry.snapshot?.voteAverage
+  };
+}
+
 export function useLibraryEntries(status?: LibraryStatus) {
   return useQuery({
     queryKey: status ? libraryQueryKeys.byStatus(status) : libraryQueryKeys.entries(),
@@ -81,9 +93,29 @@ export function useRemoveLibraryEntry() {
   });
 }
 
+export function useLibraryMediaActions() {
+  const setStatus = useSetLibraryStatus();
+  const removeEntry = useRemoveLibraryEntry();
+
+  return {
+    isMutating: setStatus.isPending || removeEntry.isPending,
+    setStatusForMedia(media: CatalogMedia, status: LibraryStatus) {
+      setStatus.mutate({
+        mediaType: media.mediaType,
+        tmdbId: media.tmdbId,
+        status,
+        snapshot: createSnapshotFromCatalogMedia(media)
+      });
+    },
+    removeMedia(media: CatalogMedia) {
+      removeEntry.mutate({ mediaType: media.mediaType, tmdbId: media.tmdbId });
+    }
+  };
+}
+
 export function getLibraryEntryStatusLabel(entry: LibraryEntryRecord | undefined): string {
   if (!entry) {
-    return 'Pas encore dans votre liste';
+    return 'Non classe';
   }
 
   return entry.status === 'watchlist' ? 'A regarder' : 'Vu';

@@ -1,9 +1,10 @@
-import { CheckCircle2, Clock3, Film, Star, Trash2, Tv } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle2, Clock3, Film, MoreHorizontal, Star, Tv } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
+import { MediaPoster } from '@/components/ui/MediaPoster';
 import type { CatalogMedia } from '@/features/catalog/types';
 import { getLibraryEntryStatusLabel } from '@/features/library/hooks';
-import { getTmdbImageUrl } from '@/services/tmdb/images';
+import { createMediaDetailPath } from '@/features/media/route';
 import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
 
 type LibraryMediaItemProps = {
@@ -19,14 +20,36 @@ function getMediaLabel(mediaType: CatalogMedia['mediaType']): string {
   return mediaType === 'movie' ? 'Film' : 'Serie';
 }
 
-function getStatusClasses(status: LibraryStatus, isActive: boolean): string {
-  if (isActive) {
-    return status === 'watchlist'
-      ? 'bg-viki text-white border-viki'
-      : 'bg-emerald-400 text-emerald-950 border-emerald-300';
-  }
+function getPrimaryActionLabel(status: LibraryStatus): string {
+  return status === 'watched' ? 'Marquer vu' : 'A regarder';
+}
 
-  return 'border-white/12 bg-white/8 text-white hover:bg-white/14';
+function StatusButton({
+  active,
+  children,
+  disabled,
+  onClick
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={[
+        'pressable focus-ring flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-55',
+        active
+          ? 'bg-viki text-white shadow-[0_10px_24px_rgba(255,79,135,0.28)]'
+          : 'bg-white/9 text-white hover:bg-white/14'
+      ].join(' ')}
+    >
+      {children}
+    </button>
+  );
 }
 
 export function LibraryMediaItem({
@@ -37,111 +60,100 @@ export function LibraryMediaItem({
   onSetStatus,
   onRemove
 }: LibraryMediaItemProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const posterUrl = getTmdbImageUrl(media.posterPath, 'w185');
-  const shouldShowPoster = posterUrl && !imageFailed;
   const Icon = media.mediaType === 'movie' ? Film : Tv;
   const otherStatus: LibraryStatus = entry?.status === 'watchlist' ? 'watched' : 'watchlist';
   const statusLabel = getLibraryEntryStatusLabel(entry);
 
   return (
-    <article className="grid grid-cols-[5.25rem_1fr] gap-3 rounded-lg border border-white/10 bg-surface p-3 shadow-panel sm:grid-cols-[6rem_1fr]">
-      <div className="aspect-[2/3] overflow-hidden rounded-md border border-white/10 bg-white/10">
-        {shouldShowPoster ? (
-          <img
-            src={posterUrl}
-            alt={`Affiche de ${media.title}`}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-            onError={() => setImageFailed(true)}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-[linear-gradient(145deg,rgba(255,79,135,0.20),rgba(91,141,239,0.14))] p-2 text-center text-[0.68rem] font-semibold leading-4 text-white">
-            {media.title}
-          </div>
-        )}
-      </div>
+    <article className="media-enter group relative grid grid-cols-[5.6rem_1fr] gap-3 rounded-[1.35rem] bg-white/[0.055] p-2.5 shadow-[0_16px_38px_rgba(0,0,0,0.26)] transition duration-200 hover:bg-white/[0.075] sm:grid-cols-[6.2rem_1fr]">
+      <NavLink
+        to={createMediaDetailPath(media.mediaType, media.tmdbId)}
+        className="focus-ring rounded-[1.05rem]"
+        aria-label={`Ouvrir la fiche de ${media.title}`}
+      >
+        <MediaPoster title={media.title} posterPath={media.posterPath} size="w185" />
+      </NavLink>
 
-      <div className="min-w-0 space-y-3">
-        <div>
-          <div className="mb-2 flex flex-wrap items-center gap-2 text-[0.68rem] font-bold uppercase text-subtle">
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/8 px-2 py-1 text-white">
-              <Icon aria-hidden="true" className="size-3" />
+      <div className="min-w-0 py-1 pr-1">
+        <NavLink
+          to={createMediaDetailPath(media.mediaType, media.tmdbId)}
+          className="focus-ring block rounded-lg"
+        >
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-medium text-subtle">
+            <span className="inline-flex items-center gap-1 text-muted">
+              <Icon aria-hidden="true" className="size-3.5" />
               {getMediaLabel(media.mediaType)}
             </span>
-            <span>{statusLabel}</span>
-          </div>
-          <h2 className="line-clamp-2 text-base font-bold leading-5 text-white">{media.title}</h2>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium text-subtle">
             {media.releaseYear ? <span>{media.releaseYear}</span> : null}
             {media.originCountries[0] ? <span>{media.originCountries[0]}</span> : null}
             {media.voteAverage ? (
-              <span className="inline-flex items-center gap-1">
-                <Star aria-hidden="true" className="size-3" />
+              <span className="inline-flex items-center gap-1 text-viki-soft">
+                <Star aria-hidden="true" className="size-3.5 fill-current" />
                 {media.voteAverage.toFixed(1)}
               </span>
             ) : null}
           </div>
-        </div>
+          <h2 className="line-clamp-2 text-[1.02rem] font-bold leading-5 text-white">
+            {media.title}
+          </h2>
+          <p className="mt-1 text-xs font-medium text-subtle">{statusLabel}</p>
+        </NavLink>
 
         {mode === 'search' ? (
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <StatusButton
+              active={entry?.status === 'watchlist'}
               disabled={isBusy || entry?.status === 'watchlist'}
               onClick={() => onSetStatus(media, 'watchlist')}
-              className={`flex min-h-11 items-center justify-center gap-2 rounded-md border px-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-75 ${getStatusClasses('watchlist', entry?.status === 'watchlist')}`}
             >
               <Clock3 aria-hidden="true" className="size-4" />A regarder
-            </button>
-            <button
-              type="button"
+            </StatusButton>
+            <StatusButton
+              active={entry?.status === 'watched'}
               disabled={isBusy || entry?.status === 'watched'}
               onClick={() => onSetStatus(media, 'watched')}
-              className={`flex min-h-11 items-center justify-center gap-2 rounded-md border px-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-75 ${getStatusClasses('watched', entry?.status === 'watched')}`}
             >
               <CheckCircle2 aria-hidden="true" className="size-4" />
               Vu
-            </button>
-            {entry ? (
-              <button
-                type="button"
-                disabled={isBusy}
-                onClick={() => onRemove(media)}
-                className="col-span-2 flex min-h-10 items-center justify-center gap-2 rounded-md border border-white/10 bg-transparent px-2 text-sm font-semibold text-muted transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Trash2 aria-hidden="true" className="size-4" />
-                Retirer de ma liste
-              </button>
-            ) : null}
+            </StatusButton>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
+          <div className="mt-3 flex items-center gap-2">
             <button
               type="button"
               disabled={isBusy}
               onClick={() => onSetStatus(media, otherStatus)}
-              className="flex min-h-11 items-center justify-center gap-2 rounded-md bg-viki px-3 text-sm font-bold text-white transition hover:bg-viki-soft disabled:cursor-not-allowed disabled:opacity-60"
+              className="pressable focus-ring flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-viki px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(255,79,135,0.26)] disabled:cursor-not-allowed disabled:opacity-55"
             >
               {otherStatus === 'watched' ? (
                 <CheckCircle2 aria-hidden="true" className="size-4" />
               ) : (
                 <Clock3 aria-hidden="true" className="size-4" />
               )}
-              {otherStatus === 'watched' ? 'Marquer vu' : 'A regarder'}
+              {getPrimaryActionLabel(otherStatus)}
             </button>
             <button
               type="button"
               disabled={isBusy}
               onClick={() => onRemove(media)}
-              className="flex min-h-11 items-center justify-center gap-2 rounded-md border border-white/10 px-3 text-sm font-semibold text-muted transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              className="pressable focus-ring flex size-11 shrink-0 items-center justify-center rounded-full bg-white/8 text-muted hover:bg-danger/16 hover:text-danger disabled:cursor-not-allowed disabled:opacity-55"
+              aria-label={`Retirer ${media.title} de ma liste`}
             >
-              <Trash2 aria-hidden="true" className="size-4" />
-              Retirer
+              <MoreHorizontal aria-hidden="true" className="size-5" />
             </button>
           </div>
         )}
+
+        {mode === 'search' && entry ? (
+          <button
+            type="button"
+            disabled={isBusy}
+            onClick={() => onRemove(media)}
+            className="pressable focus-ring mt-2 min-h-9 rounded-full px-3 text-xs font-semibold text-subtle hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            Retirer de ma liste
+          </button>
+        ) : null}
       </div>
     </article>
   );

@@ -12,16 +12,16 @@ const navItems: NavigationItem[] = [
   { to: '/', label: 'Accueil', icon: Home, end: true },
   { to: '/recherche', label: 'Recherche', icon: Search },
   { to: '/liste', label: 'Ma liste', icon: Library },
-  { to: '/reglages', label: 'Réglages', icon: Settings }
+  { to: '/reglages', label: 'Reglages', icon: Settings }
 ] as const;
 
 export function BottomNavigation() {
   return (
     <nav
       aria-label="Navigation principale"
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[#08090f]/92 px-3 pb-[calc(0.55rem+env(safe-area-inset-bottom))] pt-2 shadow-nav backdrop-blur-xl lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.65rem+env(safe-area-inset-bottom))] pt-2 lg:hidden"
     >
-      <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
+      <div className="mx-auto grid max-w-md grid-cols-4 rounded-[1.65rem] border border-white/8 bg-[#080b14]/82 p-1.5 shadow-nav backdrop-blur-2xl">
         {navItems.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
@@ -29,16 +29,31 @@ export function BottomNavigation() {
             end={end}
             className={({ isActive }) =>
               [
-                'flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-[0.7rem] font-medium outline-none transition',
-                'focus-visible:ring-2 focus-visible:ring-viki focus-visible:ring-offset-2 focus-visible:ring-offset-app',
-                isActive
-                  ? 'bg-white/10 text-white'
-                  : 'text-muted hover:bg-white/10 hover:text-white'
+                'pressable focus-ring relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-[1.25rem] px-2 text-[0.68rem] font-semibold',
+                isActive ? 'text-white' : 'text-subtle hover:text-white'
               ].join(' ')
             }
           >
-            <Icon aria-hidden="true" size={21} strokeWidth={2.2} />
-            <span>{label}</span>
+            {({ isActive }) => (
+              <>
+                <span
+                  aria-hidden="true"
+                  className={[
+                    'absolute inset-x-4 top-1 h-0.5 rounded-full bg-viki transition duration-200',
+                    isActive ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
+                  ].join(' ')}
+                />
+                <span
+                  className={[
+                    'flex size-8 items-center justify-center rounded-full transition duration-200',
+                    isActive ? 'bg-white/10 text-viki-soft' : 'text-subtle'
+                  ].join(' ')}
+                >
+                  <Icon aria-hidden="true" size={20} strokeWidth={2.15} />
+                </span>
+                <span>{label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </div>

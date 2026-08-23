@@ -2,7 +2,9 @@
 
 ## Direction
 
-Dramark doit ressembler a une application de divertissement mobile premium : sombre, visuelle, tactile, dense sans etre chargee, inspiree par les codes streaming sans copier Netflix, Rakuten Viki ou leurs identites.
+Dramark doit ressembler a une application de divertissement mobile premium : sombre, visuelle, tactile, dense sans etre chargee, inspiree par les codes streaming asiatique sans copier Netflix, Rakuten Viki ou leurs identites.
+
+La direction active est : streaming asiatique premium + editorial + cinematographique + mobile-first.
 
 ## Navigation
 
@@ -13,7 +15,7 @@ Navigation principale en quatre entrees :
 3. Ma liste
 4. Reglages
 
-Sur mobile, la navigation est en barre basse avec zones tactiles confortables et `safe-area-inset-bottom`.
+Sur mobile, la navigation est en barre basse translucide avec zones tactiles confortables et `safe-area-inset-bottom`. Les fiches media peuvent masquer cette barre pour une experience immersive, avec un retour clair et compatible navigation navigateur.
 
 ## Principes mobile-first
 
@@ -25,40 +27,44 @@ Sur mobile, la navigation est en barre basse avec zones tactiles confortables et
 
 ## Design system initial
 
-- Theme sombre : fond quasi noir, surfaces translucides mesurees.
-- Accent principal : rose premium distinctif, utilise avec parcimonie.
-- Rayons moderes : cartes et panneaux autour de 8px.
+- Theme sombre nuit : fond quasi noir bleute, surfaces translucides mesurees.
+- Accent principal : rose/corail premium, utilise pour CTA, actif, focus et details de marque.
+- Accent froid cyan tres discret pour profondeur.
+- Rayons doux coherents sur posters, actions et controles.
+- Bordures visibles limitees ; privilegier overlays, ombres et espace negatif.
 - Focus visible obligatoire.
-- Skeleton loaders pour les chargements de recherche et listes.
+- Skeleton loaders pour les chargements de recherche, listes et fiches.
 - Etats vides explicites.
 - Etats d'erreur et offline visibles sans casser le shell.
+- Motion sobre : 150-300 ms, transform/opacity, respect `prefers-reduced-motion`.
 
 ## Ecrans attendus
 
 ### Accueil
 
-Presentation simple du produit, acces rapide vers `Recherche` et `Ma liste`, compteurs locaux si disponibles. Pas de promesse de disponibilite plateforme.
+Dashboard personnel visuel : identite Dramark, compteurs discrets, rails `A regarder` et `Recemment vus` si la bibliotheque contient des medias, empty state oriente recherche sinon.
 
 ### Recherche
 
-Recherche textuelle TMDB films + series, minimum 2 caracteres, resultats mobiles lisibles, actions immediates `A regarder`, `Vu` et `Retirer`.
+Recherche textuelle TMDB films + series, minimum 2 caracteres, resultats mobiles avec poster dominant, metadonnees compactes, actions immediates `A regarder`, `Vu` et `Retirer`. La zone media ouvre la fiche detail.
 
 ### Fiche media
 
-Backdrop, poster, titre, titre original si pertinent, annee, pays, genres, synopsis, episodes pour series, note TMDB, casting principal, type de contenu, actions `A regarder` et `Vu`.
+Ecran immersif avec grand backdrop, poster, titre, titre original, annee, pays, genres, note TMDB, actions `A regarder` et `Vu`, synopsis, informations essentielles et rail de casting. Pas de suivi episode.
 
 ### Ma liste
 
-Deux vues : `A regarder` et `Vu`. Tris : date d'ajout, titre, annee, note TMDB si disponible.
+Deux vues : `A regarder` et `Vu`, segmented control anime, tri compact, items de collection avec poster dominant et actions secondaires discretes.
 
 ### Reglages
 
-Export, import, informations PWA, credits/attributions, version de l'application.
+Liste sobre : export, import, informations PWA, credits/attributions, version de l'application lorsque disponible.
 
 ## Accessibilite
 
 - Contraste suffisant sur fonds sombres.
-- Labels accessibles pour navigation et champs.
+- Labels accessibles pour navigation, champs et boutons icon-only.
 - Focus clavier visible.
 - Pas d'information transmise uniquement par la couleur.
 - Tailles tactiles coherentes.
+- Images avec `alt` pertinent ou decorative si elles doublonnent un contexte textuel.

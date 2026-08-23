@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { HomePage } from '@/pages/HomePage';
 import { LibraryPage } from '@/pages/LibraryPage';
+import { MediaDetailPage } from '@/pages/MediaDetailPage';
 import { SearchPage } from '@/pages/SearchPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 
@@ -14,6 +15,7 @@ export function App() {
         <Route path="recherche" element={<SearchPage />} />
         <Route path="liste" element={<LibraryPage />} />
         <Route path="reglages" element={<SettingsPage />} />
+        <Route path="media/:mediaType/:tmdbId" element={<MediaDetailPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
