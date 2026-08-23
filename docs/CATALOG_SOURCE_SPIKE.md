@@ -1,5 +1,7 @@
 # Spike source catalogue Viki France
 
+> Note produit : cette recommandation technique a ete abandonnee apres pivot. Dramark ne cherche plus a automatiser le catalogue Viki France ; le document reste un historique d'investigation.
+
 ## Contexte
 
 La Phase 1 a valide que TMDB fonctionne pour les metadonnees, mais que Watch Providers `FR` ne retourne pas Rakuten Viki pour `movie` ni `tv`. Rakuten TV est retourne par TMDB, mais c'est un autre service et il ne doit pas etre utilise comme substitut.

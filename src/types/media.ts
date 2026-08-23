@@ -12,6 +12,7 @@ export type LocalMediaSnapshot = {
   posterPath?: string;
   releaseYear?: number;
   primaryCountry?: string;
+  voteAverage?: number;
 };
 
 export type LibraryEntry = MediaIdentity & {

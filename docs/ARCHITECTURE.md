@@ -11,9 +11,11 @@ Next.js et les state managers globaux lourds sont exclus tant qu'aucun besoin se
 - `src/app/` : routes et providers applicatifs.
 - `src/components/` : shell, navigation et UI reutilisable.
 - `src/pages/` : pages routees.
-- `src/features/` : futures verticales `catalog`, `library`, `search`.
-- `src/services/tmdb/` : details TMDB, token, requetes, provider Rakuten Viki.
-- `src/db/` : Dexie et repositories.
+- `src/features/catalog/` : types media normalises, cartes et helpers de presentation reutilisables.
+- `src/features/search/` : hooks de recherche TMDB et query keys.
+- `src/features/library/` : hooks, affichage et tris de bibliotheque.
+- `src/services/tmdb/` : configuration, client, recherche et mappers TMDB.
+- `src/db/` : Dexie et repositories IndexedDB.
 - `src/types/` : types metier stables.
 - `src/utils/` : helpers petits et nommes.
 
@@ -22,22 +24,22 @@ Le code visuel ne doit pas contenir de logique reseau ou IndexedDB directe. Les 
 ## Flux de donnees
 
 1. React Router affiche les pages.
-2. TanStack Query gere les appels TMDB et leur cache memoire.
-3. `src/services/tmdb` encapsule l'API TMDB, la resolution provider, Discover et les mappers vers le domaine.
-4. `src/features/catalog` expose les hooks et services de catalogue utilises par l'UI.
-5. `src/db` encapsule IndexedDB pour la bibliotheque personnelle et les caches locaux persistants.
-6. Les features orchestrent les transformations entre types externes et types metier.
+2. TanStack Query gere les appels TMDB, les lectures IndexedDB et les invalidations UI.
+3. `src/services/tmdb` encapsule l'API TMDB et transforme les reponses brutes vers le domaine.
+4. `src/features/search` expose la recherche multi TMDB, filtree aux films et series.
+5. `src/db` encapsule IndexedDB pour la bibliotheque personnelle.
+6. `src/features/library` orchestre les mutations `A regarder`, `Vu` et `Retirer` sans state manager global.
 
 ## TMDB
 
 La configuration TMDB est centralisee dans `src/services/tmdb/config.ts`.
-La region est `FR` et la langue est `fr-FR`.
+La langue est `fr-FR`.
 
 L'acces direct navigateur a TMDB est accepte pour cette PWA personnelle initiale. Limite importante : `VITE_TMDB_ACCESS_TOKEN` est expose dans le bundle frontend et ne doit jamais etre considere comme un secret serveur.
 
-L'absence de token leve une erreur explicite et affiche un avertissement de configuration dans l'app shell.
+L'absence de token leve une erreur explicite et affiche un message de configuration comprehensible dans l'UI.
 
-Le provider Rakuten Viki ne doit pas etre hardcode depuis une source non officielle. La resolution utilise les endpoints Watch Providers TMDB separement pour `movie` et `tv`, puis les rails Discover appellent `/discover/movie` et `/discover/tv` avec `watch_region=FR` et le provider correspondant. Les diagnostics exposent provider trouve/non trouve, type, pagination et volumes retournes. Diagnostic local du 2026-08-23 : TMDB Watch Providers `FR` ne retourne pas Rakuten Viki pour `movie` ni `tv`; Dramark affiche cet etat sans basculer vers une autre plateforme comme Rakuten TV.
+La recherche active utilise `/search/multi`, ignore les personnes et ne verifie plus la disponibilite Rakuten Viki. TMDB fournit la recherche et les metadonnees, pas une garantie de catalogue Viki France.
 
 ## IndexedDB
 
@@ -58,6 +60,7 @@ Schema minimal d'une entree :
     posterPath?: string
     releaseYear?: number
     primaryCountry?: string
+    voteAverage?: number
   }
 }
 ```
@@ -65,18 +68,26 @@ Schema minimal d'une entree :
 L'identifiant primaire local est `mediaType:tmdbId` pour eviter les collisions entre films et series.
 Le snapshot local est un cache d'affichage hors connexion, rafraichissable, pas un catalogue proprietaire.
 
+Regles de statut :
+
+- nouvelle entree `watchlist` : pas de `watchedAt` ;
+- nouvelle entree `watched` : `watchedAt = now` ;
+- `watchlist` vers `watched` : conserver `addedAt`, definir `watchedAt` ;
+- `watched` vers `watchlist` : conserver `addedAt`, retirer `watchedAt` ;
+- re-appuyer sur le meme statut met a jour l'entree existante sans doublon.
+
 ## Import / Export
 
-Le format futur est JSON, versionne et valide par Zod. La Phase 0 fournit le schema `version: 1`; l'interface viendra plus tard.
+Le format futur est JSON, versionne et valide par Zod. L'interface viendra plus tard.
 
 ## PWA
 
-`vite-plugin-pwa` fournit le manifest et le service worker en auto-update. La strategie Phase 0 se limite a l'app shell et aux assets de build. Le cache fin des appels TMDB et images sera decide apres les flux reels.
+`vite-plugin-pwa` fournit le manifest et le service worker en auto-update. La strategie actuelle se limite a l'app shell et aux assets de build. Le cache fin des appels TMDB et images sera decide en phase PWA/offline.
 
 ## Erreurs
 
 - Erreur de configuration TMDB : message explicite.
-- Erreur requete TMDB : erreur typee avec statut HTTP.
+- Erreur requete TMDB : message utilisateur non technique.
 - Etat offline : banniere systeme.
 - Etats vides et skeletons : composants UI dedies.
 

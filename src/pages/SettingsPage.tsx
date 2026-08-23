@@ -29,8 +29,7 @@ export function SettingsPage() {
       </div>
 
       <p className="text-xs leading-6 text-subtle">
-        This product uses the TMDB API but is not endorsed or certified by TMDB. Les donnees de
-        disponibilite Watch Providers proviennent de JustWatch.
+        This product uses the TMDB API but is not endorsed or certified by TMDB.
       </p>
     </div>
   );

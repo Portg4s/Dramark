@@ -17,25 +17,8 @@ export type CatalogMedia = {
 };
 
 export type CatalogPage = {
-  mediaType: MediaType;
-  providerId: number;
   page: number;
   totalPages: number;
   totalResults: number;
   results: CatalogMedia[];
-};
-
-export type RakutenVikiProviderIds = Partial<Record<MediaType, number>>;
-
-export type ProviderResolutionDiagnostic = {
-  mediaType: MediaType;
-  providerFound: boolean;
-  providerId?: number;
-  providerName?: string;
-  providerCount: number;
-};
-
-export type RakutenVikiProviderResolution = {
-  providerIds: RakutenVikiProviderIds;
-  diagnostics: ProviderResolutionDiagnostic[];
 };

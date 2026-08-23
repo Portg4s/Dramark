@@ -2,8 +2,7 @@
 
 ## Identite
 
-Dramark est une PWA mobile-first personnelle pour suivre les contenus disponibles sur Rakuten Viki en France.
-L'utilisateur classe chaque contenu localement dans deux statuts seulement : `A regarder` ou `Vu`.
+Dramark est une PWA mobile-first personnelle pour rechercher des films et series via TMDB, puis les classer localement dans deux statuts seulement : `A regarder` ou `Vu`.
 
 ## Commandes essentielles
 
@@ -30,15 +29,15 @@ L'utilisateur classe chaque contenu localement dans deux statuts seulement : `A 
 
 ## Regles critiques
 
-- Application en francais, region TMDB `FR`, langue `fr-FR`.
+- Application en francais, langue TMDB `fr-FR`.
 - Ne jamais commiter de cle ou token TMDB.
 - Les variables `VITE_*` sont exposees au client : ne pas les presenter comme secretes.
 - L'identite d'un contenu est `mediaType + tmdbId`, jamais `tmdbId` seul.
 - `MediaType` minimum : `movie | tv`.
 - V1 : pas de compte, auth, backend metier, sync cloud, suivi episode, notes, social ou profils.
-- TMDB reste la source de verite catalogue ; les snapshots locaux ne sont que du cache d'affichage.
+- TMDB reste la source distante de recherche et metadonnees ; les snapshots locaux ne sont que du cache d'affichage.
 - Les donnees personnelles restent locales via IndexedDB/Dexie.
-- Attribution requise : TMDB et JustWatch, sans affiliation sous-entendue avec Rakuten Viki, TMDB ou JustWatch.
+- Attribution requise : TMDB, sans affiliation sous-entendue avec Rakuten Viki ou TMDB.
 
 ## Sources de verite
 

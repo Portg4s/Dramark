@@ -1,160 +1,81 @@
-import { AlertTriangle, Database, Sparkles } from 'lucide-react';
+import { ArrowRight, Library, Search, Sparkles } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 import { PageHeader } from '@/components/ui/PageHeader';
-import { CatalogRail } from '@/features/catalog/CatalogRail';
-import { useVikiCatalogHome } from '@/features/catalog/hooks';
-import type { CatalogMedia } from '@/features/catalog/types';
-import { MissingTmdbConfigurationError, TmdbRequestError } from '@/services/tmdb/errors';
+import { useLibraryCounts } from '@/features/library/hooks';
 
-function getCatalogErrorMessage(error: unknown): string {
-  if (error instanceof MissingTmdbConfigurationError) {
-    return 'Configuration TMDB absente. Ajoutez un token pour charger le catalogue.';
-  }
-
-  if (error instanceof TmdbRequestError) {
-    return 'TMDB ne repond pas correctement pour le moment. Reessayez plus tard.';
-  }
-
-  if (error instanceof Error) {
-    return 'Impossible de charger cette section pour le moment.';
-  }
-
-  return 'Une erreur inconnue bloque cette section.';
-}
-
-function getProviderMissingMessage(mediaType: CatalogMedia['mediaType']): string {
-  return mediaType === 'movie'
-    ? 'TMDB ne retourne pas Rakuten Viki France dans la liste des providers films.'
-    : 'TMDB ne retourne pas Rakuten Viki France dans la liste des providers series.';
-}
-
-function HomeDiagnostics({
-  movieProviderId,
-  tvProviderId,
-  movieTotal,
-  tvTotal,
-  moviePage,
-  tvPage
+function HomeAction({
+  to,
+  title,
+  description,
+  icon: Icon
 }: {
-  movieProviderId?: number;
-  tvProviderId?: number;
-  movieTotal?: number;
-  tvTotal?: number;
-  moviePage?: number;
-  tvPage?: number;
+  to: string;
+  title: string;
+  description: string;
+  icon: typeof Search;
 }) {
   return (
-    <div className="flex flex-wrap gap-2 text-[0.72rem] font-medium text-subtle">
-      <span className="rounded-full border border-white/10 bg-white/7 px-3 py-1">
-        Films : {movieProviderId ? `provider ${movieProviderId}` : 'provider introuvable'}
+    <NavLink
+      to={to}
+      className="group flex min-h-28 items-center gap-4 rounded-lg border border-white/10 bg-surface p-4 shadow-panel outline-none transition hover:bg-white/12 focus-visible:ring-2 focus-visible:ring-viki focus-visible:ring-offset-2 focus-visible:ring-offset-app"
+    >
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-viki text-white">
+        <Icon aria-hidden="true" className="size-6" />
       </span>
-      <span className="rounded-full border border-white/10 bg-white/7 px-3 py-1">
-        Series : {tvProviderId ? `provider ${tvProviderId}` : 'provider introuvable'}
+      <span className="min-w-0 flex-1">
+        <span className="block text-base font-bold text-white">{title}</span>
+        <span className="mt-1 block text-sm leading-6 text-muted">{description}</span>
       </span>
-      {movieTotal !== undefined ? (
-        <span className="rounded-full border border-white/10 bg-white/7 px-3 py-1">
-          Films page {moviePage ?? 1} : {movieTotal} resultats
-        </span>
-      ) : null}
-      {tvTotal !== undefined ? (
-        <span className="rounded-full border border-white/10 bg-white/7 px-3 py-1">
-          Series page {tvPage ?? 1} : {tvTotal} resultats
-        </span>
-      ) : null}
-    </div>
+      <ArrowRight
+        aria-hidden="true"
+        className="size-5 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-white"
+      />
+    </NavLink>
   );
 }
 
 export function HomePage() {
-  const {
-    isTmdbConfigured,
-    providerResolution,
-    tvRail,
-    movieRail,
-    popularMedia,
-    tvMedia,
-    movieMedia
-  } = useVikiCatalogHome();
-  const providerIds = providerResolution.data?.providerIds;
-  const isProviderLoading = isTmdbConfigured && providerResolution.isLoading;
-  const providerError = providerResolution.error;
-  const isAnyCatalogLoading = tvRail.isLoading || movieRail.isLoading || isProviderLoading;
-  const popularError =
-    tvRail.error && movieRail.error ? getCatalogErrorMessage(tvRail.error) : undefined;
+  const counts = useLibraryCounts();
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-lg border border-white/10 bg-[linear-gradient(135deg,rgba(255,79,135,0.20),rgba(91,141,239,0.12)_45%,rgba(255,255,255,0.05))] px-5 py-6 shadow-panel sm:px-8 sm:py-10">
+      <section className="overflow-hidden rounded-lg border border-white/10 bg-[linear-gradient(135deg,rgba(255,79,135,0.22),rgba(91,141,239,0.14)_48%,rgba(255,255,255,0.05))] px-5 py-7 shadow-panel sm:px-8 sm:py-10">
         <div className="flex items-center gap-2 text-sm font-semibold text-viki-soft">
           <Sparkles aria-hidden="true" size={18} />
-          Rakuten Viki France
+          Bibliotheque personnelle
         </div>
         <PageHeader
           title="Dramark"
-          description="Decouvrez les films et series que TMDB signale comme disponibles sur Rakuten Viki en France, puis preparez votre liste personnelle."
+          description="Recherchez un film ou une serie, puis gardez simplement ce que vous voulez voir ou ce que vous avez termine."
         />
-        <HomeDiagnostics
-          movieProviderId={providerIds?.movie}
-          tvProviderId={providerIds?.tv}
-          movieTotal={movieRail.data?.totalResults}
-          moviePage={movieRail.data?.page}
-          tvTotal={tvRail.data?.totalResults}
-          tvPage={tvRail.data?.page}
-        />
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3">
+            <p className="text-2xl font-black text-white">{counts.watchlist}</p>
+            <p className="text-xs font-semibold uppercase text-subtle">A regarder</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-black/20 px-4 py-3">
+            <p className="text-2xl font-black text-white">{counts.watched}</p>
+            <p className="text-xs font-semibold uppercase text-subtle">Vu</p>
+          </div>
+        </div>
       </section>
 
-      {!isTmdbConfigured ? (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-300/20 bg-amber-300/10 px-4 py-4 text-sm text-amber-100">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <p>
-            Ajoutez un token TMDB local pour afficher les contenus reels du catalogue Viki France.
-          </p>
-        </div>
-      ) : null}
-
-      {providerError ? (
-        <div className="flex items-start gap-3 rounded-lg border border-red-300/20 bg-red-300/10 px-4 py-4 text-sm text-red-100">
-          <Database className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <p>{getCatalogErrorMessage(providerError)}</p>
-        </div>
-      ) : null}
-
-      <CatalogRail
-        title="Populaires sur Viki"
-        action="TMDB / JustWatch"
-        media={popularMedia}
-        isLoading={isAnyCatalogLoading}
-        errorMessage={popularError}
-        emptyMessage="Aucun contenu populaire n'est retourne pour Rakuten Viki France pour le moment."
-      />
-
-      <CatalogRail
-        title="Series a decouvrir"
-        media={tvMedia}
-        isLoading={isProviderLoading || tvRail.isLoading}
-        errorMessage={
-          providerResolution.data && !providerIds?.tv
-            ? getProviderMissingMessage('tv')
-            : tvRail.error
-              ? getCatalogErrorMessage(tvRail.error)
-              : undefined
-        }
-        emptyMessage="Aucune serie supplementaire n'est retournee pour cette page."
-      />
-
-      <CatalogRail
-        title="Films a decouvrir"
-        media={movieMedia}
-        isLoading={isProviderLoading || movieRail.isLoading}
-        errorMessage={
-          providerResolution.data && !providerIds?.movie
-            ? getProviderMissingMessage('movie')
-            : movieRail.error
-              ? getCatalogErrorMessage(movieRail.error)
-              : undefined
-        }
-        emptyMessage="Aucun film supplementaire n'est retourne pour cette page."
-      />
+      <div className="grid gap-3 md:grid-cols-2">
+        <HomeAction
+          to="/recherche"
+          title="Rechercher"
+          description="Trouvez un titre dans TMDB et ajoutez-le en un geste."
+          icon={Search}
+        />
+        <HomeAction
+          to="/liste"
+          title="Ma liste"
+          description="Retrouvez vos contenus a regarder et deja vus sur cet appareil."
+          icon={Library}
+        />
+      </div>
     </div>
   );
 }

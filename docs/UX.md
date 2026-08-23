@@ -29,7 +29,7 @@ Sur mobile, la navigation est en barre basse avec zones tactiles confortables et
 - Accent principal : rose premium distinctif, utilise avec parcimonie.
 - Rayons moderes : cartes et panneaux autour de 8px.
 - Focus visible obligatoire.
-- Skeleton loaders pour les rails et posters.
+- Skeleton loaders pour les chargements de recherche et listes.
 - Etats vides explicites.
 - Etats d'erreur et offline visibles sans casser le shell.
 
@@ -37,11 +37,11 @@ Sur mobile, la navigation est en barre basse avec zones tactiles confortables et
 
 ### Accueil
 
-Rails de decouverte Viki France : populaires, tendances/nouveautes, categories/pays, recommandations futures. Ne pas simuler de donnees catalogue non TMDB.
+Presentation simple du produit, acces rapide vers `Recherche` et `Ma liste`, compteurs locaux si disponibles. Pas de promesse de disponibilite plateforme.
 
 ### Recherche
 
-Recherche textuelle films + series, filtre Viki France obligatoire, filtres pays, interface mobile claire.
+Recherche textuelle TMDB films + series, minimum 2 caracteres, resultats mobiles lisibles, actions immediates `A regarder`, `Vu` et `Retirer`.
 
 ### Fiche media
 
@@ -49,7 +49,7 @@ Backdrop, poster, titre, titre original si pertinent, annee, pays, genres, synop
 
 ### Ma liste
 
-Deux vues : `A regarder` et `Vu`. Tris futurs : date d'ajout, titre, annee, note TMDB si disponible.
+Deux vues : `A regarder` et `Vu`. Tris : date d'ajout, titre, annee, note TMDB si disponible.
 
 ### Reglages
 

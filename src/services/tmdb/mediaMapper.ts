@@ -1,5 +1,9 @@
 import type { CatalogMedia } from '@/features/catalog/types';
-import type { TmdbMovieDiscoverResult, TmdbTvDiscoverResult } from '@/services/tmdb/types';
+import type {
+  TmdbMovieDiscoverResult,
+  TmdbMultiSearchResult,
+  TmdbTvDiscoverResult
+} from '@/services/tmdb/types';
 
 function cleanOptionalText(value: string | null | undefined): string | undefined {
   const cleanValue = value?.trim();
@@ -63,4 +67,18 @@ export function mapTmdbTvToCatalogMedia(show: TmdbTvDiscoverResult): CatalogMedi
     voteAverage: cleanNumber(show.vote_average),
     popularity: cleanNumber(show.popularity)
   };
+}
+
+export function mapTmdbSearchResultToCatalogMedia(
+  result: TmdbMultiSearchResult
+): CatalogMedia | undefined {
+  if (result.media_type === 'movie') {
+    return mapTmdbMovieToCatalogMedia(result);
+  }
+
+  if (result.media_type === 'tv') {
+    return mapTmdbTvToCatalogMedia(result);
+  }
+
+  return undefined;
 }

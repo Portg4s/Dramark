@@ -9,47 +9,45 @@ Statut : termine
 - Creer shell mobile, navigation et placeholders propres.
 - Poser Dexie, types metier, client TMDB et docs.
 
-## Phase 1 — Catalogue Viki France
+## Phase 1 — Investigation catalogue Viki France
 
-Statut : termine
+Statut : termine / historique
 
-- Resoudre/valider le provider Rakuten Viki via TMDB Watch Providers.
-- Charger les rails de decouverte `movie` et `tv`.
-- Ajouter hooks TanStack Query et mapping UI.
-- Afficher l'accueil avec rails reels, cartes media, diagnostics et etats d'erreur.
-- Diagnostic local du 2026-08-23 : TMDB Watch Providers `FR` ne retourne pas Rakuten Viki pour `movie` ni `tv`; l'UI gere donc le provider absent sans donnees inventees.
+- Valider l'integration TMDB et Watch Providers.
+- Constater que TMDB Watch Providers `FR` ne retourne pas Rakuten Viki pour `movie` ni `tv`.
+- Conserver le travail comme diagnostic historique, pas comme direction produit active.
 
 ## Phase 1.5 — Source catalogue Viki France
 
-Statut : termine
+Statut : termine / historique
 
 - Evaluer TMDB Viki global, surfaces publiques Viki et feed Google Cast.
-- Recommander une sync locale depuis le feed public Google Cast Viki, filtree sur `eligibleRegion=FR`, avec enrichissement TMDB.
 - Documenter limites, risques et strategie de matching dans `docs/CATALOG_SOURCE_SPIKE.md`.
+- Recommandation technique finalement abandonnee au profit d'un produit plus simple centre sur la recherche TMDB et la bibliotheque locale.
 
-## Phase 2 — Recherche et filtres
+## Phase 2 — Core Loop : Recherche + Bibliotheque
 
-Statut : a faire
+Statut : termine
 
-- Recherche multi films/series.
+- Recherche multi TMDB films/series.
 - Ignorer les personnes.
-- Verifier disponibilite Viki France avec cache.
-- Ajouter filtres pays.
+- Actions immediates `A regarder`, `Vu` et `Retirer`.
+- Bibliotheque locale IndexedDB avec deux vues, compteurs et tris simples.
 
-## Phase 3 — Bibliotheque locale
+## Phase 3 — Decouverte / accueil
 
 Statut : a faire
 
-- Actions `A regarder` et `Vu`.
-- Vues et tris de `Ma liste`.
-- Rafraichissement des snapshots.
+- Accueil de decouverte base sur TMDB sans promesse de disponibilite Viki.
+- Rails ou suggestions utiles pour alimenter la recherche et la bibliotheque.
+- Etats loading/erreur/empty adaptes.
 
 ## Phase 4 — Fiches detaillees
 
 Statut : a faire
 
 - Page media detaillee.
-- Cast, genres, notes TMDB, episodes series.
+- Cast, genres, notes TMDB, episodes series si pertinent.
 - Actions bibliotheque depuis la fiche.
 
 ## Phase 5 — Import / Export

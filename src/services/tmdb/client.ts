@@ -1,12 +1,10 @@
 import {
   TMDB_API_BASE_URL,
   TMDB_LANGUAGE,
-  TMDB_REGION,
   type TmdbRuntimeConfig,
   tmdbRuntimeConfig
 } from '@/services/tmdb/config';
 import { MissingTmdbConfigurationError, TmdbRequestError } from '@/services/tmdb/errors';
-import type { MediaType } from '@/types/media';
 
 type RequestParams = Record<string, string | number | boolean | undefined>;
 
@@ -39,15 +37,6 @@ export class TmdbClient {
     }
 
     return response.json() as Promise<TResponse>;
-  }
-
-  discover(mediaType: MediaType, providerId: number, page = 1) {
-    return this.request(`/discover/${mediaType}`, {
-      page,
-      watch_region: TMDB_REGION,
-      with_watch_providers: providerId,
-      sort_by: 'popularity.desc'
-    });
   }
 }
 

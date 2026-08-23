@@ -2,19 +2,26 @@
 
 ## But
 
-Dramark est une PWA mobile-first personnelle pour suivre les contenus disponibles sur Rakuten Viki en France.
-L'application est installee principalement sur telephone et chaque appareil possede sa propre bibliotheque locale.
+Dramark est une PWA mobile-first personnelle pour rechercher des films et series via TMDB, puis les classer localement dans `A regarder` ou `Vu`.
+
+L'application est utilisee principalement en complement de Rakuten Viki : l'utilisateur voit un contenu qui l'interesse, le recherche dans Dramark, puis memorise son choix sur son appareil.
+
+Dramark ne garantit pas qu'un contenu trouve dans TMDB est disponible sur Rakuten Viki. La disponibilite Viki France n'est plus verifiee automatiquement.
 
 ## Perimetre V1
 
-- Consulter a terme le catalogue pertinent Rakuten Viki France via TMDB et Watch Providers.
-- Prendre en charge au minimum les films et series : `movie | tv`.
+- Rechercher des films et series via TMDB : `movie | tv`.
+- Ignorer les personnes et autres resultats non media.
 - Classer un contenu dans seulement deux statuts : `A regarder` et `Vu`.
 - Stocker la bibliotheque personnelle localement, sans compte et sans synchronisation.
-- Prevoir un export/import JSON versionne, sans devoir livrer l'interface complete en Phase 0.
+- Conserver un snapshot local leger pour afficher la liste rapidement et hors connexion.
+- Prevoir un export/import JSON versionne, sans devoir livrer l'interface complete tout de suite.
 
 ## Non-objectifs V1
 
+- Verification automatique de disponibilite Rakuten Viki France.
+- Watch Providers / JustWatch dans le runtime produit.
+- Watchmode, scraping Viki, feed Viki, crawler ou backend catalogue.
 - Authentification ou compte utilisateur.
 - Backend applicatif metier.
 - Base de donnees distante pour les donnees personnelles.
@@ -23,20 +30,20 @@ L'application est installee principalement sur telephone et chaque appareil poss
 - Statuts `En cours` ou `Abandonne`.
 - Notation personnelle, commentaires, social, profils multiples.
 
-## Catalogue externe
+## Source externe
 
-TMDB est la source de donnees catalogue. Les disponibilites plateformes proviennent des Watch Providers TMDB / JustWatch.
+TMDB est la source distante pour la recherche et les metadonnees : titres, posters, backdrops, synopsis, dates, pays, genres, casting futur, notes et IDs.
 
-- Region cible : `FR`
 - Langue principale : `fr-FR`
-- Provider cible : Rakuten Viki, resolu/valide via les endpoints officiels Watch Providers quand necessaire.
+- Types minimum : `movie | tv`
+- Identite locale : `mediaType + tmdbId`
 
-Pour la recherche textuelle, Dramark devra rechercher films et series, ignorer les personnes, verifier la disponibilite Viki France et cacher les verifications pour eviter les appels inutiles.
+Les donnees personnelles restent locales dans IndexedDB/Dexie. Les snapshots locaux sont des caches d'affichage, pas un catalogue propre a Dramark.
 
 ## Attributions
 
-Une section `Credits et attributions` doit mentionner TMDB et JustWatch. Mention TMDB a conserver :
+Une section `Credits et attributions` doit mentionner TMDB. Mention TMDB a conserver :
 
 > This product uses the TMDB API but is not endorsed or certified by TMDB.
 
-Dramark ne doit pas suggerer une affiliation, certification ou approbation par Rakuten Viki, TMDB ou JustWatch.
+Dramark ne doit pas suggerer une affiliation, certification ou approbation par Rakuten Viki ou TMDB.
