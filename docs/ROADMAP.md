@@ -11,11 +11,13 @@ Statut : termine
 
 ## Phase 1 — Catalogue Viki France
 
-Statut : a faire
+Statut : termine
 
 - Resoudre/valider le provider Rakuten Viki via TMDB Watch Providers.
 - Charger les rails de decouverte `movie` et `tv`.
 - Ajouter hooks TanStack Query et mapping UI.
+- Afficher l'accueil avec rails reels, cartes media, diagnostics et etats d'erreur.
+- Diagnostic local du 2026-08-23 : TMDB Watch Providers `FR` ne retourne pas Rakuten Viki pour `movie` ni `tv`; l'UI gere donc le provider absent sans donnees inventees.
 
 ## Phase 2 — Recherche et filtres
 

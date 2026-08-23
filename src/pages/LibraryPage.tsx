@@ -30,7 +30,9 @@ export function LibraryPage() {
       </div>
 
       <div className="rounded-lg border border-white/10 bg-surface px-5 py-8 text-center shadow-panel">
-        <p className="text-sm font-medium text-muted">Votre liste sera stockee localement sur cet appareil.</p>
+        <p className="text-sm font-medium text-muted">
+          Votre liste sera stockee localement sur cet appareil.
+        </p>
       </div>
     </div>
   );

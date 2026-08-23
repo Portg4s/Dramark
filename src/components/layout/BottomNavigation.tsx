@@ -31,7 +31,9 @@ export function BottomNavigation() {
               [
                 'flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-[0.7rem] font-medium outline-none transition',
                 'focus-visible:ring-2 focus-visible:ring-viki focus-visible:ring-offset-2 focus-visible:ring-offset-app',
-                isActive ? 'bg-white/10 text-white' : 'text-muted hover:bg-white/10 hover:text-white'
+                isActive
+                  ? 'bg-white/10 text-white'
+                  : 'text-muted hover:bg-white/10 hover:text-white'
               ].join(' ')
             }
           >

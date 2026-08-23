@@ -54,6 +54,12 @@ L'utilisateur classe chaque contenu localement dans deux statuts seulement : `A 
 - Avant de terminer une tache importante, lancer `npm run check`.
 - Si une validation ne peut pas etre executee, l'indiquer clairement dans le compte rendu.
 
+## Process persistants
+
+- Ne pas laisser de serveur dev, preview, watcher ou autre processus persistant actif apres une tache.
+- Si un processus persistant sert a valider, l'arreter explicitement avant le compte rendu final.
+- Pour une revue UI manuelle, preferer donner `npm run dev` afin que l'utilisateur lance et arrete le serveur.
+
 ## Efficacite contexte
 
 1. Lire ce fichier au debut d'une nouvelle tache.

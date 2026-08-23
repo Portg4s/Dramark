@@ -2,7 +2,9 @@ import { db } from '@/db/dramarkDb';
 import type { LibraryEntry, LibraryEntryRecord, MediaIdentity } from '@/types/media';
 import { createMediaKey } from '@/utils/mediaKey';
 
-export async function getLibraryEntry(identity: MediaIdentity): Promise<LibraryEntryRecord | undefined> {
+export async function getLibraryEntry(
+  identity: MediaIdentity
+): Promise<LibraryEntryRecord | undefined> {
   return db.library.get(createMediaKey(identity));
 }
 

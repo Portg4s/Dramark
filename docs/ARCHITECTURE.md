@@ -22,10 +22,11 @@ Le code visuel ne doit pas contenir de logique reseau ou IndexedDB directe. Les 
 ## Flux de donnees
 
 1. React Router affiche les pages.
-2. TanStack Query gerera les appels TMDB et leur cache memoire.
-3. `src/services/tmdb` encapsule l'API TMDB.
-4. `src/db` encapsule IndexedDB pour la bibliotheque personnelle et les caches locaux persistants.
-5. Les features orchestrent les transformations entre types externes et types metier.
+2. TanStack Query gere les appels TMDB et leur cache memoire.
+3. `src/services/tmdb` encapsule l'API TMDB, la resolution provider, Discover et les mappers vers le domaine.
+4. `src/features/catalog` expose les hooks et services de catalogue utilises par l'UI.
+5. `src/db` encapsule IndexedDB pour la bibliotheque personnelle et les caches locaux persistants.
+6. Les features orchestrent les transformations entre types externes et types metier.
 
 ## TMDB
 
@@ -36,7 +37,7 @@ L'acces direct navigateur a TMDB est accepte pour cette PWA personnelle initiale
 
 L'absence de token leve une erreur explicite et affiche un avertissement de configuration dans l'app shell.
 
-Le provider Rakuten Viki ne doit pas etre hardcode depuis une source non officielle. La resolution est prevue via les endpoints Watch Providers TMDB pour `movie` et `tv`.
+Le provider Rakuten Viki ne doit pas etre hardcode depuis une source non officielle. La resolution utilise les endpoints Watch Providers TMDB separement pour `movie` et `tv`, puis les rails Discover appellent `/discover/movie` et `/discover/tv` avec `watch_region=FR` et le provider correspondant. Les diagnostics exposent provider trouve/non trouve, type, pagination et volumes retournes. Diagnostic local du 2026-08-23 : TMDB Watch Providers `FR` ne retourne pas Rakuten Viki pour `movie` ni `tv`; Dramark affiche cet etat sans basculer vers une autre plateforme comme Rakuten TV.
 
 ## IndexedDB
 
