@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react';
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { useMemo, useState } from 'react';
 
 import { ActionMenu } from '@/components/ui/ActionMenu';
@@ -11,6 +12,7 @@ import {
 import { LibraryMediaItem } from '@/features/library/LibraryMediaItem';
 import { sortLibraryEntries, type LibrarySort } from '@/features/library/sorting';
 import type { LibraryStatus } from '@/types/media';
+import { listSpring, motionEase, quickFade, softSpring } from '@/utils/motion';
 
 const tabs = [
   { status: 'watchlist', label: 'À regarder' },
@@ -30,9 +32,29 @@ function getEmptyMessage(status: LibraryStatus): string {
     : 'Les films et séries que vous terminez apparaîtront ici.';
 }
 
+function AnimatedCount({ value, className = '' }: { value: number; className?: string }) {
+  const reducedMotion = useReducedMotion();
+
+  return (
+    <AnimatePresence mode="popLayout" initial={false}>
+      <motion.span
+        key={value}
+        className={`inline-block tabular-nums ${className}`}
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+        transition={quickFade}
+      >
+        {value}
+      </motion.span>
+    </AnimatePresence>
+  );
+}
+
 export function LibraryPage() {
   const [activeStatus, setActiveStatus] = useState<LibraryStatus>('watchlist');
   const [sort, setSort] = useState<LibrarySort>('recent');
+  const reducedMotion = useReducedMotion();
   const entries = useLibraryEntries(activeStatus);
   const counts = useLibraryCounts();
   const libraryActions = useLibraryMediaActions();
@@ -41,7 +63,7 @@ export function LibraryPage() {
     () => sortLibraryEntries(entries.data ?? [], sort),
     [entries.data, sort]
   );
-  const activeIndex = activeStatus === 'watchlist' ? 0 : 1;
+  const direction = activeStatus === 'watched' ? 1 : -1;
   const selectedSort = sortOptions.find((option) => option.value === sort) ?? sortOptions[0];
 
   return (
@@ -52,38 +74,46 @@ export function LibraryPage() {
           <h1 className="mt-1 text-3xl font-black text-white">Ma liste</h1>
         </div>
         <p className="text-sm font-medium text-muted">
-          {counts.watchlist} à regarder <span className="px-2 text-subtle">·</span> {counts.watched}{' '}
-          vus
+          <AnimatedCount value={counts.watchlist} /> à regarder{' '}
+          <span className="px-2 text-subtle">·</span> <AnimatedCount value={counts.watched} /> vus
         </p>
       </header>
 
-      <div className="relative grid grid-cols-2 rounded-full bg-white/[0.07] p-1">
-        <span
-          aria-hidden="true"
-          className="absolute bottom-1 top-1 w-[calc(50%-0.25rem)] rounded-full bg-brand shadow-[0_10px_24px_rgba(89,183,255,0.23)] transition-transform duration-300 ease-[var(--ease-dramark)]"
-          style={{ transform: `translateX(${activeIndex * 100}%)` }}
-        />
-        {tabs.map(({ status, label }) => {
-          const count = status === 'watchlist' ? counts.watchlist : counts.watched;
-          const isActive = activeStatus === status;
+      <LayoutGroup id="library-tabs">
+        <div className="relative grid grid-cols-2 rounded-full bg-surface/72 p-1">
+          {tabs.map(({ status, label }) => {
+            const count = status === 'watchlist' ? counts.watchlist : counts.watched;
+            const isActive = activeStatus === status;
 
-          return (
-            <button
-              key={status}
-              type="button"
-              onClick={() => setActiveStatus(status)}
-              className={[
-                'focus-ring relative z-10 flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-bold transition duration-200',
-                isActive ? 'text-white' : 'text-muted hover:text-white'
-              ].join(' ')}
-              aria-pressed={isActive}
-            >
-              {label}
-              <span className={isActive ? 'text-white/82' : 'text-subtle'}>{count}</span>
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setActiveStatus(status)}
+                className={[
+                  'focus-ring relative z-10 flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-bold transition-colors duration-200',
+                  isActive ? 'text-white' : 'text-muted hover:text-white'
+                ].join(' ')}
+                aria-pressed={isActive}
+              >
+                {isActive ? (
+                  <motion.span
+                    layoutId="library-active-tab"
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-full bg-brand shadow-[0_10px_24px_rgba(89,183,255,0.24)]"
+                    transition={reducedMotion ? { duration: 0.01 } : softSpring}
+                  />
+                ) : null}
+                <span className="relative z-10">{label}</span>
+                <AnimatedCount
+                  value={count}
+                  className={isActive ? 'relative z-10 text-white/82' : 'relative z-10 text-subtle'}
+                />
+              </button>
+            );
+          })}
+        </div>
+      </LayoutGroup>
 
       <div className="flex justify-end">
         <ActionMenu
@@ -95,64 +125,80 @@ export function LibraryPage() {
             onSelect: () => setSort(option.value)
           }))}
           trigger={({ ref, isOpen, toggle }) => (
-            <button
+            <motion.button
               ref={ref}
               type="button"
               onClick={toggle}
               aria-haspopup="menu"
               aria-expanded={isOpen}
-              className="pressable focus-ring inline-flex min-h-11 items-center gap-2 rounded-full bg-white/[0.075] px-4 text-sm font-semibold text-white hover:bg-white/[0.11]"
+              whileTap={reducedMotion ? undefined : { scale: 0.975 }}
+              className="pressable focus-ring inline-flex min-h-11 items-center gap-2 rounded-full bg-surface/72 px-4 text-sm font-semibold text-white hover:bg-surface-2/70"
             >
               {selectedSort.label}
               <ChevronDown
                 aria-hidden="true"
                 className={['size-4 text-subtle transition', isOpen ? 'rotate-180' : ''].join(' ')}
               />
-            </button>
+            </motion.button>
           )}
         />
       </div>
 
-      {entries.isLoading ? (
-        <div
-          role="status"
-          className="rounded-[1.35rem] bg-white/[0.055] px-5 py-6 text-sm text-muted"
+      <AnimatePresence mode="wait" initial={false} custom={direction}>
+        <motion.div
+          key={activeStatus}
+          custom={direction}
+          initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: direction > 0 ? 24 : -24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: direction > 0 ? -24 : 24 }}
+          transition={{ duration: reducedMotion ? 0.12 : 0.28, ease: motionEase }}
         >
-          Chargement de votre liste...
-        </div>
-      ) : null}
+          {entries.isLoading ? (
+            <div
+              role="status"
+              className="rounded-[1.35rem] bg-surface/64 px-5 py-6 text-sm text-muted"
+            >
+              Chargement de votre liste...
+            </div>
+          ) : null}
 
-      {entries.error ? (
-        <div className="rounded-[1.35rem] bg-danger/12 px-5 py-4 text-sm text-red-100">
-          Impossible de lire la bibliothèque locale pour le moment.
-        </div>
-      ) : null}
+          {entries.error ? (
+            <div className="rounded-[1.35rem] bg-danger/12 px-5 py-4 text-sm text-red-100">
+              Impossible de lire la bibliothèque locale pour le moment.
+            </div>
+          ) : null}
 
-      {!entries.isLoading && !entries.error && sortedEntries.length === 0 ? (
-        <div className="rounded-[1.35rem] bg-white/[0.055] px-5 py-8 text-center">
-          <p className="text-sm font-medium text-muted">{getEmptyMessage(activeStatus)}</p>
-        </div>
-      ) : null}
+          {!entries.isLoading && !entries.error && sortedEntries.length === 0 ? (
+            <div className="rounded-[1.35rem] bg-surface/64 px-5 py-8 text-center">
+              <p className="text-sm font-medium text-muted">{getEmptyMessage(activeStatus)}</p>
+            </div>
+          ) : null}
 
-      {sortedEntries.length > 0 ? (
-        <div className="space-y-3">
-          {sortedEntries.map((entry) => {
-            const media = mapLibraryEntryToCatalogMedia(entry);
+          {sortedEntries.length > 0 ? (
+            <LayoutGroup id={`library-list-${activeStatus}`}>
+              <motion.div layout className="space-y-3" transition={listSpring}>
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {sortedEntries.map((entry) => {
+                    const media = mapLibraryEntryToCatalogMedia(entry);
 
-            return (
-              <LibraryMediaItem
-                key={entry.id}
-                media={media}
-                entry={entry}
-                mode="library"
-                isBusy={libraryActions.isMutating}
-                onSetStatus={libraryActions.setStatusForMedia}
-                onRemove={libraryActions.removeMedia}
-              />
-            );
-          })}
-        </div>
-      ) : null}
+                    return (
+                      <LibraryMediaItem
+                        key={entry.id}
+                        media={media}
+                        entry={entry}
+                        mode="library"
+                        isBusy={libraryActions.isMutating}
+                        onSetStatus={libraryActions.setStatusForMedia}
+                        onRemove={libraryActions.removeMedia}
+                      />
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
+            </LayoutGroup>
+          ) : null}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

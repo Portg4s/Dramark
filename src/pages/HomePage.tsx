@@ -1,9 +1,10 @@
 import { ArrowRight, Library, Search } from 'lucide-react';
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { NavLink } from 'react-router-dom';
 
 import homeBackground from '@/assets/brand/dramark-home-bg.png';
 import logoHorizontal from '@/assets/brand/dramark-logo-horizontal.png';
-import brandMark from '@/assets/brand/dramark-mark.png';
+import brandMark from '@/assets/brand/dramark-markV2.png';
 import { MediaCard } from '@/features/catalog/MediaCard';
 import {
   mapLibraryEntryToCatalogMedia,
@@ -11,6 +12,26 @@ import {
   useLibraryEntries
 } from '@/features/library/hooks';
 import { sortLibraryEntries } from '@/features/library/sorting';
+import { listSpring, motionEase, quickFade } from '@/utils/motion';
+
+function AnimatedCount({ value }: { value: number }) {
+  const reducedMotion = useReducedMotion();
+
+  return (
+    <AnimatePresence mode="popLayout" initial={false}>
+      <motion.span
+        key={value}
+        className="inline-block tabular-nums"
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+        transition={quickFade}
+      >
+        {value}
+      </motion.span>
+    </AnimatePresence>
+  );
+}
 
 function HomeAction({
   to,
@@ -23,23 +44,27 @@ function HomeAction({
   description: string;
   icon: typeof Search;
 }) {
+  const reducedMotion = useReducedMotion();
+
   return (
-    <NavLink
-      to={to}
-      className="pressable focus-ring group flex min-h-16 items-center gap-3 rounded-[1.25rem] bg-white/[0.07] px-4 py-3 shadow-[0_16px_38px_rgba(0,0,0,0.22)] hover:bg-white/[0.1]"
-    >
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-brand-soft">
-        <Icon aria-hidden="true" className="size-5" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-bold text-white">{title}</span>
-        <span className="mt-0.5 block text-xs leading-5 text-subtle">{description}</span>
-      </span>
-      <ArrowRight
-        aria-hidden="true"
-        className="size-4 shrink-0 text-subtle transition group-hover:translate-x-0.5 group-hover:text-white"
-      />
-    </NavLink>
+    <motion.div whileTap={reducedMotion ? undefined : { scale: 0.985 }}>
+      <NavLink
+        to={to}
+        className="pressable focus-ring group flex min-h-16 items-center gap-3 rounded-[1.25rem] bg-surface/64 px-4 py-3 shadow-[0_16px_38px_rgba(0,0,0,0.22)] hover:bg-surface-2/54"
+      >
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-2/58 text-brand-soft">
+          <Icon aria-hidden="true" className="size-5" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold text-white">{title}</span>
+          <span className="mt-0.5 block text-xs leading-5 text-subtle">{description}</span>
+        </span>
+        <ArrowRight
+          aria-hidden="true"
+          className="size-4 shrink-0 text-subtle transition group-hover:translate-x-0.5 group-hover:text-white"
+        />
+      </NavLink>
+    </motion.div>
   );
 }
 
@@ -66,13 +91,21 @@ function HomeRail({
         </NavLink>
       </div>
       {media.length > 0 ? (
-        <div className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
-          {media.map((item) => (
-            <MediaCard key={`${item.mediaType}:${item.tmdbId}`} media={item} />
-          ))}
-        </div>
+        <LayoutGroup id={`home-rail-${title}`}>
+          <motion.div
+            layout
+            className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6"
+            transition={listSpring}
+          >
+            <AnimatePresence initial={false}>
+              {media.map((item) => (
+                <MediaCard key={`${item.mediaType}:${item.tmdbId}`} media={item} />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </LayoutGroup>
       ) : (
-        <p className="rounded-[1.25rem] bg-white/[0.055] px-4 py-5 text-sm leading-6 text-muted">
+        <p className="rounded-[1.25rem] bg-surface/64 px-4 py-5 text-sm leading-6 text-muted">
           {empty}
         </p>
       )}
@@ -81,6 +114,7 @@ function HomeRail({
 }
 
 export function HomePage() {
+  const reducedMotion = useReducedMotion();
   const counts = useLibraryCounts();
   const watchlist = useLibraryEntries('watchlist');
   const watched = useLibraryEntries('watched');
@@ -90,7 +124,12 @@ export function HomePage() {
 
   return (
     <div className="space-y-8">
-      <header className="relative -mx-4 -mt-[calc(1rem+env(safe-area-inset-top))] overflow-hidden px-4 pb-9 pt-[calc(2.6rem+env(safe-area-inset-top))] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <motion.header
+        initial={reducedMotion ? { opacity: 0.8 } : { opacity: 0.6, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: reducedMotion ? 0.12 : 0.3, ease: motionEase }}
+        className="relative -mx-4 -mt-[calc(1rem+env(safe-area-inset-top))] overflow-hidden px-4 pb-9 pt-[calc(2.6rem+env(safe-area-inset-top))] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+      >
         <img
           src={homeBackground}
           alt=""
@@ -98,7 +137,7 @@ export function HomePage() {
           loading="eager"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(89,183,255,0.18),transparent_17rem),radial-gradient(circle_at_72%_18%,rgba(160,94,255,0.12),transparent_14rem),linear-gradient(180deg,rgba(7,9,18,0.20)_0%,rgba(7,9,18,0.66)_58%,#070912_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(89,183,255,0.18),transparent_17rem),radial-gradient(circle_at_72%_18%,rgba(255,107,182,0.08),transparent_14rem),linear-gradient(180deg,rgba(11,18,32,0.20)_0%,rgba(11,18,32,0.66)_58%,#0B1220_100%)]" />
         <div className="relative mx-auto flex max-w-xl flex-col items-center text-center">
           <img
             src={logoHorizontal}
@@ -108,11 +147,12 @@ export function HomePage() {
             decoding="async"
           />
           <p className="mt-4 rounded-full bg-black/24 px-4 py-2 text-sm font-semibold text-white/88 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-            {counts.watched} vus <span className="px-2 text-brand-soft/75">·</span>{' '}
-            {counts.watchlist} à regarder
+            <AnimatedCount value={counts.watched} /> vus{' '}
+            <span className="px-2 text-brand-soft/75">·</span>{' '}
+            <AnimatedCount value={counts.watchlist} /> à regarder
           </p>
         </div>
-      </header>
+      </motion.header>
 
       {hasEntries ? (
         <div className="space-y-8">
@@ -128,7 +168,7 @@ export function HomePage() {
           />
         </div>
       ) : (
-        <section className="relative overflow-hidden rounded-[1.7rem] bg-[linear-gradient(135deg,rgba(89,183,255,0.16),rgba(113,215,255,0.08)_52%,rgba(255,255,255,0.055))] p-5 shadow-panel">
+        <section className="relative overflow-hidden rounded-[1.7rem] bg-[linear-gradient(135deg,rgba(62,166,255,0.16),rgba(0,210,255,0.08)_52%,rgba(27,42,82,0.32))] p-5 shadow-panel">
           <div
             aria-hidden="true"
             className="absolute -right-16 -top-20 size-48 rounded-full bg-brand/18 blur-3xl"
@@ -148,13 +188,15 @@ export function HomePage() {
               Recherchez dans TMDB, classez en un geste, et Dramark garde votre liste sur cet
               appareil.
             </p>
-            <NavLink
-              to="/recherche"
-              className="pressable focus-ring inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(89,183,255,0.28)]"
-            >
-              Rechercher
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </NavLink>
+            <motion.div whileTap={reducedMotion ? undefined : { scale: 0.975 }}>
+              <NavLink
+                to="/recherche"
+                className="pressable focus-ring inline-flex min-h-12 items-center gap-2 rounded-full bg-brand px-5 text-sm font-bold text-white shadow-[0_14px_34px_rgba(89,183,255,0.28)]"
+              >
+                Rechercher
+                <ArrowRight aria-hidden="true" className="size-4" />
+              </NavLink>
+            </motion.div>
           </div>
         </section>
       )}

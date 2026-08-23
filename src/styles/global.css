@@ -1,16 +1,19 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-app: #070912;
-  --color-ink: #f7f2f5;
-  --color-surface: rgba(19, 24, 39, 0.7);
-  --color-surface-soft: rgba(255, 255, 255, 0.08);
+  --color-app: #0b1220;
+  --color-ink: #f5f9ff;
+  --color-surface: #0f1b36;
+  --color-surface-soft: rgba(15, 27, 54, 0.72);
+  --color-surface-2: #1b2a52;
   --color-brand: #59b7ff;
-  --color-brand-soft: #9ad8ff;
-  --color-cyan-soft: #71d7ff;
+  --color-brand-dark: #3ea6ff;
+  --color-brand-soft: #a5e1ff;
+  --color-cyan-soft: #00d2ff;
+  --color-petal: #ff6bb6;
   --color-danger: #ff6b7a;
-  --color-muted: #b8c0cf;
-  --color-subtle: #7f8aa0;
+  --color-muted: #b8c7dc;
+  --color-subtle: #8292ad;
   --shadow-panel: 0 22px 60px rgba(0, 0, 0, 0.38);
   --shadow-poster: 0 18px 38px rgba(0, 0, 0, 0.5);
   --shadow-nav: 0 -18px 46px rgba(0, 0, 0, 0.54);
@@ -21,11 +24,11 @@
 :root {
   color-scheme: dark;
   font-family: var(--font-sans);
-  background: #070912;
+  background: #0b1220;
   --ease-dramark: cubic-bezier(0.16, 1, 0.3, 1);
-  --motion-fast: 160ms;
+  --motion-fast: 150ms;
   --motion-base: 220ms;
-  --motion-page: 320ms;
+  --motion-page: 300ms;
 }
 
 * {
@@ -34,16 +37,17 @@
 
 html {
   min-height: 100%;
-  background: #070912;
+  background: #0b1220;
 }
 
 body {
   min-height: 100%;
   margin: 0;
   background:
-    radial-gradient(circle at 16% -10%, rgba(89, 183, 255, 0.16), transparent 22rem),
-    radial-gradient(circle at 94% 10%, rgba(113, 215, 255, 0.11), transparent 20rem),
-    linear-gradient(180deg, #0c1020 0%, #070912 48%, #04050b 100%);
+    radial-gradient(circle at 18% -10%, rgba(89, 183, 255, 0.16), transparent 22rem),
+    radial-gradient(circle at 92% 8%, rgba(0, 210, 255, 0.1), transparent 20rem),
+    radial-gradient(circle at 80% 92%, rgba(27, 42, 82, 0.34), transparent 18rem),
+    linear-gradient(180deg, #0b1220 0%, #070b16 48%, #05070e 100%);
 }
 
 button,
@@ -86,14 +90,6 @@ a[href] {
 .media-enter {
   animation: media-enter 260ms var(--ease-dramark) both;
 }
-.brand-splash-mark {
-  animation: brand-splash-mark 520ms var(--ease-dramark) both;
-}
-
-.brand-splash-loader {
-  animation: brand-splash-loader 920ms var(--ease-dramark) infinite;
-  transform-origin: left center;
-}
 
 .pressable {
   transition:
@@ -114,38 +110,14 @@ a[href] {
 
 .focus-ring:focus-visible {
   box-shadow:
-    0 0 0 2px #070912,
+    0 0 0 2px #0b1220,
     0 0 0 4px rgba(89, 183, 255, 0.95);
 }
 
-@keyframes brand-splash-mark {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-    filter: drop-shadow(0 0 0 rgba(89, 183, 255, 0));
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-    filter: drop-shadow(0 0 22px rgba(89, 183, 255, 0.18));
-  }
-}
-
-@keyframes brand-splash-loader {
-  0% {
-    transform: translateX(-105%) scaleX(0.72);
-  }
-  48% {
-    transform: translateX(35%) scaleX(1);
-  }
-  100% {
-    transform: translateX(210%) scaleX(0.72);
-  }
-}
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -156,7 +128,7 @@ a[href] {
 @keyframes media-enter {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.98);
+    transform: translateY(8px) scale(0.985);
   }
   to {
     opacity: 1;

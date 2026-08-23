@@ -1,4 +1,5 @@
 import { ArrowLeft, CheckCircle2, Clock3, Film, Star, Trash2, Tv, UserRound } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { MediaPoster } from '@/components/ui/MediaPoster';
@@ -11,6 +12,7 @@ import { getTmdbImageUrl } from '@/services/tmdb/images';
 import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
 import { formatCountryName, formatLanguageName } from '@/utils/displayNames';
 import { createMediaKey } from '@/utils/mediaKey';
+import { motionEase, quickFade } from '@/utils/motion';
 
 function getMediaLabel(mediaType: CatalogMedia['mediaType']): string {
   return mediaType === 'movie' ? 'Film' : 'Série';
@@ -195,6 +197,7 @@ export function MediaDetailPage() {
   const details = useMediaDetails(params?.mediaType, params?.tmdbId);
   const libraryIndex = useLibraryIndex();
   const libraryActions = useLibraryMediaActions();
+  const reducedMotion = useReducedMotion();
 
   if (!params) {
     return <Navigate to="/recherche" replace />;
@@ -260,10 +263,19 @@ export function MediaDetailPage() {
   const languageName = formatLanguageName(media.originalLanguage);
 
   return (
-    <article className="min-h-dvh pb-10">
+    <motion.article
+      className="min-h-dvh pb-10"
+      initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+      transition={reducedMotion ? { duration: 0.12 } : { duration: 0.3, ease: motionEase }}
+    >
       <section className="relative min-h-[25rem] overflow-hidden px-4 pb-8 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 lg:px-8">
         {backdropUrl ? (
-          <img
+          <motion.img
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.7 }}
+            transition={quickFade}
             src={backdropUrl}
             alt=""
             className="absolute inset-0 h-full w-full object-cover opacity-70"
@@ -283,7 +295,12 @@ export function MediaDetailPage() {
           <ArrowLeft aria-hidden="true" className="size-5" />
         </button>
 
-        <div className="relative z-10 mt-24 grid grid-cols-[7.2rem_1fr] gap-4 sm:grid-cols-[9rem_1fr]">
+        <motion.div
+          className="relative z-10 mt-24 grid grid-cols-[7.2rem_1fr] gap-4 sm:grid-cols-[9rem_1fr]"
+          initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={reducedMotion ? { duration: 0.12 } : { duration: 0.3, ease: motionEase }}
+        >
           <MediaPoster
             title={media.title}
             posterPath={media.posterPath}
@@ -332,10 +349,17 @@ export function MediaDetailPage() {
               </p>
             ) : null}
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      <div className="space-y-8 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        className="space-y-8 px-4 sm:px-6 lg:px-8"
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={
+          reducedMotion ? { duration: 0.12 } : { duration: 0.28, delay: 0.05, ease: motionEase }
+        }
+      >
         <div className="space-y-4">
           <div className="flex flex-wrap gap-2 text-sm font-medium text-muted">
             {infoLine.map((item) => (
@@ -441,7 +465,7 @@ export function MediaDetailPage() {
             </div>
           </section>
         ) : null}
-      </div>
-    </article>
+      </motion.div>
+    </motion.article>
   );
 }
