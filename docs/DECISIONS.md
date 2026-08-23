@@ -39,3 +39,11 @@ Decision : ne pas figer un provider ID depuis une source externe non officielle.
 Raison : les IDs et disponibilites doivent venir des endpoints Watch Providers TMDB.
 
 Consequences : la Phase 1 devra valider le provider pour `movie` et `tv`, puis cacher intelligemment les resultats utiles.
+
+## Source de disponibilite Viki France
+
+Decision : utiliser comme cible d'architecture une commande locale de synchronisation basee sur le feed public Google Cast Viki, filtree sur `eligibleRegion` contenant `FR`, puis enrichie par TMDB.
+
+Raison : TMDB Watch Providers ne reference pas Rakuten Viki en France, tandis que le feed public Viki expose des donnees structurees Schema.org avec regions eligibles. Cette approche reste compatible avec une PWA statique et evite une API privee, une authentification ou un crawler permanent.
+
+Consequences : TMDB reste la source de metadonnees enrichies et de matching, mais plus la source de verite disponibilite Viki France. Une future phase devra creer un `catalog:sync` prudent, streamant les shards sans dump brut, avec etats `matched`, `ambiguous` et `unmatched`.

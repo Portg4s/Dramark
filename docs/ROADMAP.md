@@ -19,6 +19,14 @@ Statut : termine
 - Afficher l'accueil avec rails reels, cartes media, diagnostics et etats d'erreur.
 - Diagnostic local du 2026-08-23 : TMDB Watch Providers `FR` ne retourne pas Rakuten Viki pour `movie` ni `tv`; l'UI gere donc le provider absent sans donnees inventees.
 
+## Phase 1.5 — Source catalogue Viki France
+
+Statut : termine
+
+- Evaluer TMDB Viki global, surfaces publiques Viki et feed Google Cast.
+- Recommander une sync locale depuis le feed public Google Cast Viki, filtree sur `eligibleRegion=FR`, avec enrichissement TMDB.
+- Documenter limites, risques et strategie de matching dans `docs/CATALOG_SOURCE_SPIKE.md`.
+
 ## Phase 2 — Recherche et filtres
 
 Statut : a faire
