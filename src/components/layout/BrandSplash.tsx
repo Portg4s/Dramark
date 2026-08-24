@@ -7,7 +7,21 @@ import { motionEase } from '@/utils/motion';
 
 const MIN_SPLASH_MS = 1050;
 const REDUCED_MIN_SPLASH_MS = 700;
+const ARTWORK_VISIBLE_HOLD_MS = 620;
+const REDUCED_ARTWORK_VISIBLE_HOLD_MS = 500;
 const FINISH_HOLD_MS = 140;
+const IMAGE_READY_TIMEOUT_MS = 3500;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    const timer = window.setTimeout(() => resolve(undefined), timeoutMs);
+
+    promise
+      .then((value) => resolve(value))
+      .catch(() => resolve(undefined))
+      .finally(() => window.clearTimeout(timer));
+  });
+}
 
 function decodeImage(src: string): Promise<void> {
   if (typeof window === 'undefined') {
@@ -17,14 +31,16 @@ function decodeImage(src: string): Promise<void> {
   const image = new Image();
   image.src = src;
 
-  if (image.decode) {
-    return image.decode().catch(() => undefined);
-  }
-
-  return new Promise((resolve) => {
+  const loadPromise = new Promise<void>((resolve) => {
     image.onload = () => resolve();
     image.onerror = () => resolve();
   });
+
+  if (image.decode) {
+    return Promise.race([image.decode(), loadPromise]).catch(() => undefined);
+  }
+
+  return loadPromise;
 }
 
 function waitForFonts(): Promise<unknown> {
@@ -45,6 +61,9 @@ export function BrandSplash() {
     let cancelled = false;
     const startedAt = performance.now();
     const minimumDuration = reducedMotion ? REDUCED_MIN_SPLASH_MS : MIN_SPLASH_MS;
+    const artworkVisibleHold = reducedMotion
+      ? REDUCED_ARTWORK_VISIBLE_HOLD_MS
+      : ARTWORK_VISIBLE_HOLD_MS;
 
     const progressTimer = window.setInterval(
       () => {
@@ -63,36 +82,38 @@ export function BrandSplash() {
       reducedMotion ? 110 : 70
     );
 
-    Promise.all([decodeImage(splashBackground), decodeImage(brandMark), waitForFonts()]).finally(
-      () => {
-        const elapsed = performance.now() - startedAt;
-        const remaining = Math.max(0, minimumDuration - elapsed);
+    Promise.all([
+      withTimeout(decodeImage(splashBackground), IMAGE_READY_TIMEOUT_MS),
+      withTimeout(decodeImage(brandMark), IMAGE_READY_TIMEOUT_MS),
+      waitForFonts()
+    ]).finally(() => {
+      const elapsed = performance.now() - startedAt;
+      const remaining = Math.max(0, minimumDuration - elapsed, artworkVisibleHold);
 
+      window.setTimeout(() => {
+        if (cancelled) {
+          return;
+        }
+
+        window.clearInterval(progressTimer);
+        setProgress(100);
         window.setTimeout(() => {
           if (cancelled) {
             return;
           }
 
-          window.clearInterval(progressTimer);
-          setProgress(100);
-          window.setTimeout(() => {
-            if (cancelled) {
-              return;
-            }
-
-            setIsFinishing(true);
-            window.setTimeout(
-              () => {
-                if (!cancelled) {
-                  setIsVisible(false);
-                }
-              },
-              reducedMotion ? 80 : 320
-            );
-          }, FINISH_HOLD_MS);
-        }, remaining);
-      }
-    );
+          setIsFinishing(true);
+          window.setTimeout(
+            () => {
+              if (!cancelled) {
+                setIsVisible(false);
+              }
+            },
+            reducedMotion ? 80 : 320
+          );
+        }, FINISH_HOLD_MS);
+      }, remaining);
+    });
 
     return () => {
       cancelled = true;

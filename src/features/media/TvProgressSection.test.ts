@@ -16,6 +16,19 @@ function makeEpisodes(count: number): TvEpisode[] {
   });
 }
 
+function makeContinuousEpisodes(count: number, firstEpisodeNumber = 53): TvEpisode[] {
+  return Array.from({ length: count }, (_, index) => {
+    const episodeNumber = firstEpisodeNumber + index;
+
+    return {
+      tmdbId: episodeNumber,
+      seasonNumber: 2,
+      episodeNumber,
+      name: `Episode ${episodeNumber}`
+    };
+  });
+}
+
 function episodeNumbers(episodes: TvEpisode[]): number[] {
   return episodes.map((episode) => episode.episodeNumber);
 }
@@ -37,6 +50,14 @@ describe('getEpisodePreview', () => {
     expect(
       episodeNumbers(getEpisodePreview(makeEpisodes(22), { seasonNumber: 1, episodeNumber: 16 }))
     ).toEqual([13, 14, 15, 16, 17, 18]);
+  });
+
+  it('keeps the next local slot visible for a continuously numbered season', () => {
+    expect(
+      episodeNumbers(
+        getEpisodePreview(makeContinuousEpisodes(22), { seasonNumber: 2, episodeNumber: 16 })
+      )
+    ).toEqual([65, 66, 67, 68, 69, 70]);
   });
 
   it('falls back to the first six episodes when the next episode is in another season', () => {

@@ -42,14 +42,6 @@ export function BottomNavigation() {
             >
               {({ isActive }) => (
                 <>
-                  {isActive ? (
-                    <motion.span
-                      layoutId="bottom-nav-active"
-                      aria-hidden="true"
-                      className="absolute top-2 size-8 rounded-full bg-brand/14 shadow-[0_0_18px_rgba(0,210,255,0.18)]"
-                      transition={reducedMotion ? { duration: 0.01 } : softSpring}
-                    />
-                  ) : null}
                   <motion.span
                     className={[
                       'relative z-10 flex size-8 items-center justify-center rounded-full transition-colors duration-200',
@@ -62,7 +54,20 @@ export function BottomNavigation() {
                     }
                     transition={reducedMotion ? { duration: 0.01 } : softSpring}
                   >
-                    <Icon aria-hidden="true" size={20} strokeWidth={2.15} />
+                    {isActive ? (
+                      <motion.span
+                        layoutId="bottom-nav-active"
+                        aria-hidden="true"
+                        className="absolute inset-0 rounded-full bg-brand/14 shadow-[0_0_18px_rgba(0,210,255,0.18)]"
+                        transition={reducedMotion ? { duration: 0.01 } : softSpring}
+                      />
+                    ) : null}
+                    <Icon
+                      aria-hidden="true"
+                      className="relative z-10"
+                      size={20}
+                      strokeWidth={2.15}
+                    />
                   </motion.span>
                   <span className="relative z-10">{label}</span>
                 </>

@@ -1,4 +1,5 @@
 import type { TvEpisode } from '@/features/catalog/types';
+import { getEpisodeProgressSlot } from '@/features/media/episodeSlots';
 import type { EpisodePosition } from '@/features/media/tvProgress';
 
 export function getEpisodePreview(
@@ -14,7 +15,7 @@ export function getEpisodePreview(
     ? episodes.findIndex(
         (episode) =>
           episode.seasonNumber === nextEpisode.seasonNumber &&
-          episode.episodeNumber === nextEpisode.episodeNumber
+          getEpisodeProgressSlot(episodes, episode) === nextEpisode.episodeNumber
       )
     : -1;
 

@@ -271,6 +271,15 @@ export function MediaDetailPage() {
       exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
       transition={reducedMotion ? { duration: 0.12 } : { duration: 0.3, ease: motionEase }}
     >
+      <button
+        type="button"
+        onClick={handleBack}
+        className="pressable focus-ring fixed left-4 top-[calc(0.85rem+env(safe-area-inset-top))] z-40 flex size-11 items-center justify-center rounded-full bg-black/42 text-white shadow-panel backdrop-blur-xl sm:left-6 lg:left-8"
+        aria-label="Retour"
+      >
+        <ArrowLeft aria-hidden="true" className="size-5" />
+      </button>
+
       <section className="relative min-h-[25rem] overflow-hidden px-4 pb-8 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 lg:px-8">
         {backdropUrl ? (
           <motion.img
@@ -287,17 +296,8 @@ export function MediaDetailPage() {
           aria-hidden="true"
           className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,9,18,0.20)_0%,rgba(7,9,18,0.72)_56%,#070912_100%)]"
         />
-        <button
-          type="button"
-          onClick={handleBack}
-          className="pressable focus-ring relative z-10 flex size-11 items-center justify-center rounded-full bg-black/35 text-white shadow-panel backdrop-blur-xl"
-          aria-label="Retour"
-        >
-          <ArrowLeft aria-hidden="true" className="size-5" />
-        </button>
-
         <motion.div
-          className="relative z-10 mt-24 grid grid-cols-[7.2rem_1fr] gap-4 sm:grid-cols-[9rem_1fr]"
+          className="relative z-10 mt-36 grid grid-cols-[7.2rem_1fr] gap-4 sm:grid-cols-[9rem_1fr]"
           initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={reducedMotion ? { duration: 0.12 } : { duration: 0.3, ease: motionEase }}

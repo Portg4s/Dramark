@@ -8,9 +8,9 @@ import type {
   TvEpisode,
   TvSeasonSummary
 } from '@/features/catalog/types';
+import { createEpisodeProgressKey, getEpisodeByProgressSlot } from '@/features/media/episodeSlots';
 import { useTvSeasonDetails } from '@/features/media/hooks';
 import {
-  createEpisodeKey,
   getDefaultSeasonNumber,
   getEffectiveWatchedEpisodes,
   getNextEpisode,
@@ -56,6 +56,24 @@ function formatEpisodeNumber(episode: TvEpisode): string {
 
 function formatEpisodeMeta(episode: TvEpisode): string | undefined {
   return episode.runtimeMinutes ? `~${episode.runtimeMinutes} min` : undefined;
+}
+
+function formatContinueEpisode(
+  nextEpisode: ReturnType<typeof getNextEpisode>,
+  activeSeasonEpisodes: TvEpisode[]
+): string | undefined {
+  if (!nextEpisode) {
+    return undefined;
+  }
+
+  const tmdbEpisode = getEpisodeByProgressSlot(
+    activeSeasonEpisodes,
+    nextEpisode.seasonNumber,
+    nextEpisode.episodeNumber
+  );
+  const episodeNumber = tmdbEpisode?.episodeNumber ?? nextEpisode.episodeNumber;
+
+  return `Continuer \u00b7 Saison ${nextEpisode.seasonNumber} \u00b7 \u00c9pisode ${episodeNumber}`;
 }
 
 function getStateLabel(state: ReturnType<typeof getTvViewingState>): string {
@@ -104,7 +122,8 @@ export function TvProgressSection({
   }
 
   function toggleEpisode(episode: TvEpisode) {
-    const key = createEpisodeKey(episode.seasonNumber, episode.episodeNumber);
+    const episodes = seasonDetails.data?.episodes ?? [];
+    const key = createEpisodeProgressKey(episodes, episode);
     const nextWatched = new Set(watchedEpisodes);
 
     if (nextWatched.has(key)) {
@@ -119,9 +138,7 @@ export function TvProgressSection({
   function toggleSeason() {
     const episodes = seasonDetails.data?.episodes ?? [];
     const nextWatched = new Set(watchedEpisodes);
-    const seasonKeys = episodes.map((episode) =>
-      createEpisodeKey(episode.seasonNumber, episode.episodeNumber)
-    );
+    const seasonKeys = episodes.map((episode) => createEpisodeProgressKey(episodes, episode));
     const isSeasonWatched =
       seasonKeys.length > 0 && seasonKeys.every((key) => nextWatched.has(key));
 
@@ -154,11 +171,12 @@ export function TvProgressSection({
     : getEpisodePreview(activeSeasonEpisodes, nextEpisode);
   const hiddenEpisodeCount = activeSeasonEpisodes.length - displayedEpisodes.length;
   const activeSeasonKeys = activeSeasonEpisodes.map((episode) =>
-    createEpisodeKey(episode.seasonNumber, episode.episodeNumber)
+    createEpisodeProgressKey(activeSeasonEpisodes, episode)
   );
   const isActiveSeasonWatched =
     activeSeasonKeys.length > 0 && activeSeasonKeys.every((key) => watchedSet.has(key));
   const percent = Math.round(ratio * 100);
+  const continueLabel = formatContinueEpisode(nextEpisode, activeSeasonEpisodes);
 
   return (
     <section className="space-y-4 rounded-[1.35rem] bg-surface/64 p-4 shadow-panel">
@@ -198,10 +216,8 @@ export function TvProgressSection({
             ? `${watchedCount} / ${totalCount} épisodes`
             : `${watchedCount} / ${totalCount} épisodes vus`}
         </p>
-        {nextEpisode ? (
-          <p className="text-sm font-semibold text-white/82">
-            Continuer · Saison {nextEpisode.seasonNumber} · Épisode {nextEpisode.episodeNumber}
-          </p>
+        {continueLabel ? (
+          <p className="text-sm font-semibold text-white/82">{continueLabel}</p>
         ) : null}
       </div>
 
@@ -273,7 +289,7 @@ export function TvProgressSection({
             >
               <AnimatePresence initial={false}>
                 {displayedEpisodes.map((episode) => {
-                  const key = createEpisodeKey(episode.seasonNumber, episode.episodeNumber);
+                  const key = createEpisodeProgressKey(activeSeasonEpisodes, episode);
                   const isWatched = watchedSet.has(key);
                   const meta = formatEpisodeMeta(episode);
                   const stillUrl = getTmdbImageUrl(episode.stillPath, 'w300');

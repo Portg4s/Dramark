@@ -104,7 +104,7 @@ function ContinueCard({ entry }: { entry: LibraryEntryRecord }) {
             <h3 className="line-clamp-2 text-sm font-black leading-5 text-white">{media.title}</h3>
             {progress.nextEpisode ? (
               <p className="mt-1 text-xs font-semibold text-white/82">
-                S{progress.nextEpisode.seasonNumber} · E{progress.nextEpisode.episodeNumber}
+                Saison {progress.nextEpisode.seasonNumber} {'\u00b7 prochain \u00e9pisode'}
               </p>
             ) : null}
             <p className="mt-1 text-xs text-muted">
