@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createLibraryRepository, type LibraryTable } from '@/db/libraryRepository';
+import { createEpisodeKey, createFullRegularWatchedEpisodes } from '@/features/media/tvProgress';
 import type { LibraryEntryRecord } from '@/types/media';
 
 function createMemoryTable(initialEntries: LibraryEntryRecord[] = []): LibraryTable & {
@@ -126,5 +127,102 @@ describe('libraryRepository', () => {
     await expect(repository.listByStatus('watchlist')).resolves.toHaveLength(1);
     await repository.remove({ mediaType: 'tv', tmdbId: 15 });
     await expect(repository.get({ mediaType: 'tv', tmdbId: 15 })).resolves.toBeUndefined();
+  });
+
+  it('clears tv progress when a series is explicitly reset to watchlist', async () => {
+    const repository = createLibraryRepository(createMemoryTable());
+
+    await repository.setTvProgress({
+      mediaType: 'tv',
+      tmdbId: 21,
+      seasons: [{ seasonNumber: 1, episodeCount: 1 }],
+      watchedEpisodes: ['1:1'],
+      now: '2026-08-23T09:00:00.000Z'
+    });
+    const entry = await repository.setStatus({
+      mediaType: 'tv',
+      tmdbId: 21,
+      status: 'watchlist',
+      now: '2026-08-23T10:00:00.000Z'
+    });
+
+    expect(entry.status).toBe('watchlist');
+    expect(entry.tvProgress).toBeUndefined();
+    expect(entry.watchedAt).toBeUndefined();
+  });
+
+  it('marks a series watched when all regular episodes are watched', async () => {
+    const repository = createLibraryRepository(createMemoryTable());
+
+    const entry = await repository.setTvProgress({
+      mediaType: 'tv',
+      tmdbId: 22,
+      seasons: [
+        { seasonNumber: 0, episodeCount: 2 },
+        { seasonNumber: 1, episodeCount: 2 }
+      ],
+      watchedEpisodes: ['0:1', '1:1', '1:2'],
+      now: '2026-08-23T11:00:00.000Z'
+    });
+
+    expect(entry.status).toBe('watched');
+    expect(entry.watchedAt).toBe('2026-08-23T11:00:00.000Z');
+    expect(entry.tvProgress?.watchedEpisodes).toEqual(['0:1', '1:1', '1:2']);
+  });
+
+  it('keeps a series in watchlist when only specials are watched', async () => {
+    const repository = createLibraryRepository(createMemoryTable());
+
+    const entry = await repository.setTvProgress({
+      mediaType: 'tv',
+      tmdbId: 23,
+      seasons: [
+        { seasonNumber: 0, episodeCount: 2 },
+        { seasonNumber: 1, episodeCount: 2 }
+      ],
+      watchedEpisodes: ['0:1'],
+      now: '2026-08-23T11:00:00.000Z'
+    });
+
+    expect(entry.status).toBe('watchlist');
+    expect(entry.watchedAt).toBeUndefined();
+  });
+
+  it('deduplicates watched episodes in tv progress', async () => {
+    const repository = createLibraryRepository(createMemoryTable());
+
+    const entry = await repository.setTvProgress({
+      mediaType: 'tv',
+      tmdbId: 24,
+      seasons: [{ seasonNumber: 1, episodeCount: 2 }],
+      watchedEpisodes: ['1:2', '1:2', '1:1'],
+      now: '2026-08-23T11:00:00.000Z'
+    });
+
+    expect(entry.tvProgress?.watchedEpisodes).toEqual(['1:1', '1:2']);
+  });
+
+  it('stores a single logical update for a bulk season change', async () => {
+    const table = createMemoryTable();
+    const repository = createLibraryRepository(table);
+    const watchedEpisodes = createFullRegularWatchedEpisodes([
+      { seasonNumber: 1, episodeCount: 3 }
+    ]);
+
+    const entry = await repository.setTvProgress({
+      mediaType: 'tv',
+      tmdbId: 25,
+      seasons: [{ seasonNumber: 1, episodeCount: 3 }],
+      watchedEpisodes,
+      now: '2026-08-23T11:00:00.000Z'
+    });
+
+    expect(table.records.size).toBe(1);
+    expect(entry.tvProgress?.watchedEpisodes).toEqual([
+      createEpisodeKey(1, 1),
+      createEpisodeKey(1, 2),
+      createEpisodeKey(1, 3)
+    ]);
+    expect(entry.status).toBe('watched');
   });
 });

@@ -15,12 +15,24 @@ export type LocalMediaSnapshot = {
   voteAverage?: number;
 };
 
+export type TvSeasonProgressMeta = {
+  seasonNumber: number;
+  episodeCount: number;
+};
+
+export type TvProgress = {
+  watchedEpisodes: string[];
+  seasons: TvSeasonProgressMeta[];
+  updatedAt: string;
+};
+
 export type LibraryEntry = MediaIdentity & {
   status: LibraryStatus;
   addedAt: string;
   updatedAt: string;
   watchedAt?: string;
   snapshot?: LocalMediaSnapshot;
+  tvProgress?: TvProgress;
 };
 
 export type LibraryEntryRecord = LibraryEntry & {

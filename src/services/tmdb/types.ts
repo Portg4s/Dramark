@@ -116,6 +116,33 @@ export type TmdbImagesResponse = {
   logos?: TmdbImageMetadata[] | null;
 };
 
+export type TmdbTvSeasonSummary = {
+  id: number;
+  season_number?: number | null;
+  episode_count?: number | null;
+  name?: string | null;
+  air_date?: string | null;
+  poster_path?: string | null;
+};
+
+export type TmdbTvEpisode = {
+  id: number;
+  season_number?: number | null;
+  episode_number?: number | null;
+  name?: string | null;
+  overview?: string | null;
+  air_date?: string | null;
+  still_path?: string | null;
+  runtime?: number | null;
+};
+
+export type TmdbTvSeasonDetailsResponse = {
+  id: number;
+  season_number?: number | null;
+  name?: string | null;
+  episodes?: TmdbTvEpisode[] | null;
+};
+
 export type TmdbMovieDetailsResponse = TmdbDiscoverResultBase & {
   title?: string | null;
   original_title?: string | null;
@@ -145,6 +172,7 @@ export type TmdbTvDetailsResponse = TmdbDiscoverResultBase & {
   created_by?: TmdbNamedEntity[] | null;
   networks?: TmdbNamedEntity[] | null;
   vote_count?: number | null;
+  seasons?: TmdbTvSeasonSummary[] | null;
   aggregate_credits?: TmdbAggregateCreditsResponse | null;
   images?: TmdbImagesResponse | null;
 };

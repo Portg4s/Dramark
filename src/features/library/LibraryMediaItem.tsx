@@ -15,7 +15,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { MediaPoster } from '@/components/ui/MediaPoster';
 import type { CatalogMedia } from '@/features/catalog/types';
-import { getLibraryEntryStatusLabel } from '@/features/library/hooks';
+import { getLibraryEntryProgress, getLibraryEntryStatusLabel } from '@/features/library/hooks';
 import { createMediaDetailPath } from '@/features/media/route';
 import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
 import { listSpring, quickFade } from '@/utils/motion';
@@ -83,6 +83,8 @@ export function LibraryMediaItem({
   const Icon = media.mediaType === 'movie' ? Film : Tv;
   const otherStatus: LibraryStatus = entry?.status === 'watchlist' ? 'watched' : 'watchlist';
   const statusLabel = getLibraryEntryStatusLabel(entry);
+  const progress = getLibraryEntryProgress(entry);
+  const showProgress = media.mediaType === 'tv' && progress.isPartial;
   const detailPath = createMediaDetailPath(media.mediaType, media.tmdbId);
   const exitX = entry?.status === 'watchlist' ? 28 : -28;
 
@@ -132,15 +134,33 @@ export function LibraryMediaItem({
             <h2 className="line-clamp-2 text-[1.02rem] font-bold leading-5 text-white">
               {media.title}
             </h2>
-            <motion.p
-              key={statusLabel}
+            <motion.div
+              key={`${statusLabel}-${progress.watched}-${progress.total}`}
               initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={quickFade}
-              className="mt-1 text-xs font-medium text-subtle"
+              className="mt-1 space-y-1"
             >
-              {statusLabel}
-            </motion.p>
+              <p className="text-xs font-medium text-subtle">
+                <span className={showProgress ? 'text-brand-soft' : undefined}>{statusLabel}</span>
+                {showProgress ? (
+                  <span className="text-subtle">
+                    {' '}
+                    · {progress.watched} / {progress.total}
+                  </span>
+                ) : null}
+              </p>
+              {showProgress ? (
+                <span className="block h-1.5 overflow-hidden rounded-full bg-white/10">
+                  <motion.span
+                    className="block h-full origin-left rounded-full bg-brand"
+                    initial={false}
+                    animate={{ scaleX: progress.ratio }}
+                    transition={reducedMotion ? { duration: 0.01 } : quickFade}
+                  />
+                </span>
+              ) : null}
+            </motion.div>
           </NavLink>
         </motion.div>
 

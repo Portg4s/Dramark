@@ -1,17 +1,21 @@
-import { ArrowRight, Library, Search } from 'lucide-react';
+import { ArrowRight, Library, Search, Tv } from 'lucide-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { NavLink } from 'react-router-dom';
 
 import homeBackground from '@/assets/brand/dramark-home-bg.png';
 import logoHorizontal from '@/assets/brand/dramark-logo-horizontal.png';
 import brandMark from '@/assets/brand/dramark-markV2.png';
+import { MediaPoster } from '@/components/ui/MediaPoster';
 import { MediaCard } from '@/features/catalog/MediaCard';
 import {
+  getLibraryEntryProgress,
   mapLibraryEntryToCatalogMedia,
   useLibraryCounts,
   useLibraryEntries
 } from '@/features/library/hooks';
 import { sortLibraryEntries } from '@/features/library/sorting';
+import { createMediaDetailPath } from '@/features/media/route';
+import type { LibraryEntryRecord } from '@/types/media';
 import { listSpring, motionEase, quickFade } from '@/utils/motion';
 
 function AnimatedCount({ value }: { value: number }) {
@@ -68,6 +72,92 @@ function HomeAction({
   );
 }
 
+function ContinueCard({ entry }: { entry: LibraryEntryRecord }) {
+  const reducedMotion = useReducedMotion();
+  const media = mapLibraryEntryToCatalogMedia(entry);
+  const progress = getLibraryEntryProgress(entry);
+
+  return (
+    <motion.div
+      layout
+      className="w-64 shrink-0 sm:w-72"
+      whileTap={reducedMotion ? undefined : { scale: 0.982 }}
+      transition={listSpring}
+    >
+      <NavLink
+        to={createMediaDetailPath(entry.mediaType, entry.tmdbId)}
+        className="focus-ring group block overflow-hidden rounded-[1.2rem] bg-surface/64 shadow-[0_16px_38px_rgba(0,0,0,0.24)]"
+        aria-label={`Continuer ${media.title}`}
+      >
+        <div className="grid grid-cols-[5.2rem_1fr] gap-3 p-2.5">
+          <MediaPoster
+            title={media.title}
+            posterPath={media.posterPath}
+            size="w185"
+            className="rounded-[0.95rem]"
+          />
+          <div className="min-w-0 py-1 pr-1">
+            <div className="mb-1 flex items-center gap-1 text-xs font-bold text-brand-soft">
+              <Tv aria-hidden="true" className="size-3.5" />
+              Continuer
+            </div>
+            <h3 className="line-clamp-2 text-sm font-black leading-5 text-white">{media.title}</h3>
+            {progress.nextEpisode ? (
+              <p className="mt-1 text-xs font-semibold text-white/82">
+                S{progress.nextEpisode.seasonNumber} · E{progress.nextEpisode.episodeNumber}
+              </p>
+            ) : null}
+            <p className="mt-1 text-xs text-muted">
+              {progress.watched} / {progress.total} épisodes
+            </p>
+            <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-white/10">
+              <motion.span
+                className="block h-full origin-left rounded-full bg-brand"
+                initial={false}
+                animate={{ scaleX: progress.ratio }}
+                transition={reducedMotion ? { duration: 0.01 } : listSpring}
+              />
+            </span>
+          </div>
+        </div>
+      </NavLink>
+    </motion.div>
+  );
+}
+
+function ContinueRail({ entries }: { entries: LibraryEntryRecord[] }) {
+  if (entries.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-xl font-bold text-white">Continuer</h2>
+        <NavLink
+          to="/liste"
+          className="focus-ring rounded-full px-2 py-1 text-sm font-semibold text-brand-soft"
+        >
+          Tout voir
+        </NavLink>
+      </div>
+      <LayoutGroup id="home-continue-rail">
+        <motion.div
+          layout
+          className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6"
+          transition={listSpring}
+        >
+          <AnimatePresence initial={false}>
+            {entries.slice(0, 8).map((entry) => (
+              <ContinueCard key={entry.id} entry={entry} />
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </LayoutGroup>
+    </section>
+  );
+}
+
 function HomeRail({
   title,
   entries,
@@ -77,8 +167,6 @@ function HomeRail({
   entries: ReturnType<typeof sortLibraryEntries>;
   empty: string;
 }) {
-  const media = entries.slice(0, 8).map(mapLibraryEntryToCatalogMedia);
-
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
@@ -90,7 +178,7 @@ function HomeRail({
           Tout voir
         </NavLink>
       </div>
-      {media.length > 0 ? (
+      {entries.length > 0 ? (
         <LayoutGroup id={`home-rail-${title}`}>
           <motion.div
             layout
@@ -98,9 +186,11 @@ function HomeRail({
             transition={listSpring}
           >
             <AnimatePresence initial={false}>
-              {media.map((item) => (
-                <MediaCard key={`${item.mediaType}:${item.tmdbId}`} media={item} />
-              ))}
+              {entries.slice(0, 8).map((entry) => {
+                const media = mapLibraryEntryToCatalogMedia(entry);
+
+                return <MediaCard key={entry.id} media={media} entry={entry} />;
+              })}
             </AnimatePresence>
           </motion.div>
         </LayoutGroup>
@@ -120,6 +210,12 @@ export function HomePage() {
   const watched = useLibraryEntries('watched');
   const watchlistEntries = sortLibraryEntries(watchlist.data ?? [], 'recent');
   const watchedEntries = sortLibraryEntries(watched.data ?? [], 'recent');
+  const continueEntries = watchlistEntries.filter(
+    (entry) => getLibraryEntryProgress(entry).isPartial
+  );
+  const pureWatchlistEntries = watchlistEntries.filter(
+    (entry) => !getLibraryEntryProgress(entry).isPartial
+  );
   const hasEntries = watchlistEntries.length > 0 || watchedEntries.length > 0;
 
   return (
@@ -128,16 +224,17 @@ export function HomePage() {
         initial={reducedMotion ? { opacity: 0.8 } : { opacity: 0.6, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: reducedMotion ? 0.12 : 0.3, ease: motionEase }}
-        className="relative -mx-4 -mt-[calc(1rem+env(safe-area-inset-top))] overflow-hidden px-4 pb-9 pt-[calc(2.6rem+env(safe-area-inset-top))] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
+        className="relative -mx-4 -mt-[calc(1rem+env(safe-area-inset-top))] -mb-10 overflow-visible px-4 pb-20 pt-[calc(2.6rem+env(safe-area-inset-top))] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
       >
         <img
           src={homeBackground}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover object-[50%_22%] opacity-[0.66]"
+          className="absolute inset-x-0 -bottom-24 top-0 h-[calc(100%+6rem)] w-full object-cover object-[50%_22%] opacity-[0.66]"
           loading="eager"
           decoding="async"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,rgba(89,183,255,0.18),transparent_17rem),radial-gradient(circle_at_72%_18%,rgba(255,107,182,0.08),transparent_14rem),linear-gradient(180deg,rgba(11,18,32,0.20)_0%,rgba(11,18,32,0.66)_58%,#0B1220_100%)]" />
+        <div className="absolute inset-x-0 -bottom-24 top-0 bg-[radial-gradient(circle_at_50%_34%,rgba(89,183,255,0.18),transparent_17rem),radial-gradient(circle_at_72%_18%,rgba(255,107,182,0.08),transparent_14rem),linear-gradient(180deg,rgba(11,18,32,0.20)_0%,rgba(11,18,32,0.62)_52%,rgba(11,18,32,0.86)_76%,#0B1220_100%)]" />
+        <div className="absolute inset-x-0 -bottom-28 h-40 bg-[linear-gradient(180deg,rgba(11,18,32,0)_0%,rgba(11,18,32,0.72)_42%,#0B1220_100%)]" />
         <div className="relative mx-auto flex max-w-xl flex-col items-center text-center">
           <img
             src={logoHorizontal}
@@ -155,10 +252,11 @@ export function HomePage() {
       </motion.header>
 
       {hasEntries ? (
-        <div className="space-y-8">
+        <div className="relative space-y-8">
+          <ContinueRail entries={continueEntries} />
           <HomeRail
             title="À regarder"
-            entries={watchlistEntries}
+            entries={pureWatchlistEntries}
             empty="Ajoutez votre prochain titre depuis la recherche."
           />
           <HomeRail

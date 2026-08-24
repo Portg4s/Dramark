@@ -6,6 +6,7 @@ import { MediaPoster } from '@/components/ui/MediaPoster';
 import type { CatalogMedia, MediaDetails } from '@/features/catalog/types';
 import { useLibraryIndex, useLibraryMediaActions } from '@/features/library/hooks';
 import { useMediaDetails } from '@/features/media/hooks';
+import { TvProgressSection } from '@/features/media/TvProgressSection';
 import { parseMediaDetailParams } from '@/features/media/route';
 import { tmdbRuntimeConfig } from '@/services/tmdb/config';
 import { getTmdbImageUrl } from '@/services/tmdb/images';
@@ -381,6 +382,15 @@ export function MediaDetailPage() {
             onRemove={libraryActions.removeMedia}
           />
         </div>
+
+        {media.mediaType === 'tv' ? (
+          <TvProgressSection
+            details={media}
+            entry={entry}
+            isBusy={libraryActions.isMutating}
+            onSetProgress={libraryActions.setTvProgressForMedia}
+          />
+        ) : null}
 
         <section className="space-y-3">
           <h2 className="text-xl font-black text-white">Synopsis</h2>

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   mapTmdbMovieDetailsToMediaDetails,
-  mapTmdbTvDetailsToMediaDetails
+  mapTmdbTvDetailsToMediaDetails,
+  mapTmdbTvSeasonDetails
 } from '@/services/tmdb/detailsMapper';
 
 describe('TMDB media detail mappers', () => {
@@ -11,7 +12,7 @@ describe('TMDB media detail mappers', () => {
       mapTmdbMovieDetailsToMediaDetails({
         id: 42,
         title: 'Decision to Leave',
-        original_title: '헤어질 결심',
+        original_title: 'Decision to Leave Original',
         overview: 'Mystere romantique.',
         poster_path: '/poster.jpg',
         backdrop_path: '/backdrop.jpg',
@@ -51,7 +52,7 @@ describe('TMDB media detail mappers', () => {
       mediaType: 'movie',
       tmdbId: 42,
       title: 'Decision to Leave',
-      originalTitle: '헤어질 결심',
+      originalTitle: 'Decision to Leave Original',
       overview: 'Mystere romantique.',
       posterPath: '/poster.jpg',
       backdropPath: '/backdrop.jpg',
@@ -68,6 +69,7 @@ describe('TMDB media detail mappers', () => {
       voteCount: 1200,
       runtimeMinutes: 138,
       directors: ['Park Chan-wook'],
+      seasons: [],
       creators: [],
       networks: [],
       cast: [
@@ -86,7 +88,7 @@ describe('TMDB media detail mappers', () => {
       mapTmdbTvDetailsToMediaDetails({
         id: 7,
         name: 'Moving',
-        original_name: '무빙',
+        original_name: 'Moving Original',
         overview: 'Des familles avec pouvoirs.',
         poster_path: '/poster.jpg',
         backdrop_path: '/backdrop.jpg',
@@ -96,6 +98,24 @@ describe('TMDB media detail mappers', () => {
         episode_run_time: [45],
         number_of_episodes: 20,
         number_of_seasons: 1,
+        seasons: [
+          {
+            id: 100,
+            season_number: 0,
+            episode_count: 2,
+            name: 'Spéciaux',
+            air_date: '2023-08-01',
+            poster_path: '/specials.jpg'
+          },
+          {
+            id: 101,
+            season_number: 1,
+            episode_count: 20,
+            name: 'Saison 1',
+            air_date: '2023-08-09',
+            poster_path: '/season.jpg'
+          }
+        ],
         status: 'Ended',
         tagline: 'Ils ne sont pas ordinaires.',
         original_language: 'ko',
@@ -125,7 +145,7 @@ describe('TMDB media detail mappers', () => {
       mediaType: 'tv',
       tmdbId: 7,
       title: 'Moving',
-      originalTitle: '무빙',
+      originalTitle: 'Moving Original',
       releaseYear: 2023,
       originCountries: ['KR'],
       genres: ['Drame'],
@@ -137,6 +157,24 @@ describe('TMDB media detail mappers', () => {
       seasonsCount: 1,
       episodesCount: 20,
       episodeRuntimeMinutes: 45,
+      seasons: [
+        {
+          tmdbId: 100,
+          seasonNumber: 0,
+          episodeCount: 2,
+          name: 'Spéciaux',
+          airDate: '2023-08-01',
+          posterPath: '/specials.jpg'
+        },
+        {
+          tmdbId: 101,
+          seasonNumber: 1,
+          episodeCount: 20,
+          name: 'Saison 1',
+          airDate: '2023-08-09',
+          posterPath: '/season.jpg'
+        }
+      ],
       status: 'Ended',
       lastAirDate: '2023-09-20',
       nextAirDate: '2024-01-01',
@@ -148,6 +186,63 @@ describe('TMDB media detail mappers', () => {
           name: 'Han Hyo-joo',
           character: 'Lee Mi-hyun',
           profilePath: '/han.jpg'
+        }
+      ]
+    });
+  });
+
+  it('maps TV season details with compact episode fields', () => {
+    expect(
+      mapTmdbTvSeasonDetails({
+        id: 101,
+        season_number: 1,
+        name: 'Saison 1',
+        episodes: [
+          {
+            id: 2,
+            season_number: 1,
+            episode_number: 2,
+            name: 'Deuxième',
+            overview: 'Suite.',
+            air_date: '2023-08-16',
+            still_path: '/still-2.jpg',
+            runtime: 44
+          },
+          {
+            id: 1,
+            season_number: 1,
+            episode_number: 1,
+            name: 'Premier',
+            overview: 'Début.',
+            air_date: '2023-08-09',
+            still_path: '/still-1.jpg',
+            runtime: 45
+          }
+        ]
+      })
+    ).toEqual({
+      seasonNumber: 1,
+      name: 'Saison 1',
+      episodes: [
+        {
+          tmdbId: 1,
+          seasonNumber: 1,
+          episodeNumber: 1,
+          name: 'Premier',
+          overview: 'Début.',
+          airDate: '2023-08-09',
+          stillPath: '/still-1.jpg',
+          runtimeMinutes: 45
+        },
+        {
+          tmdbId: 2,
+          seasonNumber: 1,
+          episodeNumber: 2,
+          name: 'Deuxième',
+          overview: 'Suite.',
+          airDate: '2023-08-16',
+          stillPath: '/still-2.jpg',
+          runtimeMinutes: 44
         }
       ]
     });

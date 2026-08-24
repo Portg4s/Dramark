@@ -1,4 +1,4 @@
-import type { MediaDetails } from '@/features/catalog/types';
+import type { MediaDetails, TvSeasonDetails, TvSeasonSummary } from '@/features/catalog/types';
 import type {
   TmdbAggregateCast,
   TmdbCreditCast,
@@ -8,7 +8,9 @@ import type {
   TmdbMovieDetailsResponse,
   TmdbNamedEntity,
   TmdbProductionCountry,
-  TmdbTvDetailsResponse
+  TmdbTvDetailsResponse,
+  TmdbTvSeasonDetailsResponse,
+  TmdbTvSeasonSummary
 } from '@/services/tmdb/types';
 
 function cleanOptionalText(value: string | null | undefined): string | undefined {
@@ -111,6 +113,25 @@ function pickGalleryBackdrops(backdrops: TmdbImageMetadata[] | null | undefined)
     .slice(0, 6);
 }
 
+function mapTvSeasonSummary(season: TmdbTvSeasonSummary): TvSeasonSummary | undefined {
+  const seasonNumber = cleanNumber(season.season_number);
+
+  if (seasonNumber === undefined) {
+    return undefined;
+  }
+
+  return {
+    tmdbId: season.id,
+    seasonNumber,
+    episodeCount: cleanNumber(season.episode_count) ?? 0,
+    name:
+      cleanOptionalText(season.name) ??
+      (seasonNumber === 0 ? 'Spéciaux' : `Saison ${seasonNumber}`),
+    airDate: cleanOptionalText(season.air_date),
+    posterPath: cleanOptionalText(season.poster_path)
+  };
+}
+
 export function mapTmdbMovieDetailsToMediaDetails(movie: TmdbMovieDetailsResponse): MediaDetails {
   const title =
     cleanOptionalText(movie.title) ?? cleanOptionalText(movie.original_title) ?? 'Titre inconnu';
@@ -138,6 +159,7 @@ export function mapTmdbMovieDetailsToMediaDetails(movie: TmdbMovieDetailsRespons
     voteCount: cleanNumber(movie.vote_count),
     runtimeMinutes: cleanNumber(movie.runtime),
     directors: getDirectors(movie.credits?.crew),
+    seasons: [],
     creators: [],
     networks: [],
     cast: mapMovieCast(movie.credits?.cast)
@@ -150,6 +172,10 @@ export function mapTmdbTvDetailsToMediaDetails(show: TmdbTvDetailsResponse): Med
   const originalTitle = cleanOptionalText(show.original_name);
   const releaseDate = cleanOptionalText(show.first_air_date);
   const episodeRuntime = show.episode_run_time?.find((runtime) => runtime > 0);
+  const seasons = [...(show.seasons ?? [])]
+    .map(mapTvSeasonSummary)
+    .filter((season): season is TvSeasonSummary => Boolean(season))
+    .sort((first, second) => first.seasonNumber - second.seasonNumber);
 
   return {
     mediaType: 'tv',
@@ -173,6 +199,7 @@ export function mapTmdbTvDetailsToMediaDetails(show: TmdbTvDetailsResponse): Med
     seasonsCount: cleanNumber(show.number_of_seasons),
     episodesCount: cleanNumber(show.number_of_episodes),
     episodeRuntimeMinutes: cleanNumber(episodeRuntime),
+    seasons,
     status: cleanOptionalText(show.status),
     directors: [],
     creators: cleanNames(show.created_by),
@@ -180,5 +207,37 @@ export function mapTmdbTvDetailsToMediaDetails(show: TmdbTvDetailsResponse): Med
     cast: mapTvCast(show.aggregate_credits?.cast, undefined),
     lastAirDate: cleanOptionalText(show.last_air_date),
     nextAirDate: cleanOptionalText(show.next_episode_to_air?.air_date)
+  };
+}
+
+export function mapTmdbTvSeasonDetails(response: TmdbTvSeasonDetailsResponse): TvSeasonDetails {
+  const seasonNumber = cleanNumber(response.season_number) ?? 0;
+  const episodes: TvSeasonDetails['episodes'] = [];
+
+  for (const episode of response.episodes ?? []) {
+    const episodeNumber = cleanNumber(episode.episode_number);
+
+    if (episodeNumber === undefined) {
+      continue;
+    }
+
+    episodes.push({
+      tmdbId: episode.id,
+      seasonNumber: cleanNumber(episode.season_number) ?? seasonNumber,
+      episodeNumber,
+      name: cleanOptionalText(episode.name) ?? `Épisode ${episodeNumber}`,
+      overview: cleanOptionalText(episode.overview),
+      airDate: cleanOptionalText(episode.air_date),
+      stillPath: cleanOptionalText(episode.still_path),
+      runtimeMinutes: cleanNumber(episode.runtime)
+    });
+  }
+
+  return {
+    seasonNumber,
+    name:
+      cleanOptionalText(response.name) ??
+      (seasonNumber === 0 ? 'Spéciaux' : `Saison ${seasonNumber}`),
+    episodes: episodes.sort((first, second) => first.episodeNumber - second.episodeNumber)
   };
 }

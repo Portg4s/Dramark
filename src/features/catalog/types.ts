@@ -30,6 +30,32 @@ export type MediaCastMember = {
   profilePath?: string;
 };
 
+export type TvSeasonSummary = {
+  tmdbId: number;
+  seasonNumber: number;
+  episodeCount: number;
+  name: string;
+  airDate?: string;
+  posterPath?: string;
+};
+
+export type TvEpisode = {
+  tmdbId: number;
+  seasonNumber: number;
+  episodeNumber: number;
+  name: string;
+  overview?: string;
+  airDate?: string;
+  stillPath?: string;
+  runtimeMinutes?: number;
+};
+
+export type TvSeasonDetails = {
+  seasonNumber: number;
+  name: string;
+  episodes: TvEpisode[];
+};
+
 export type MediaDetails = CatalogMedia & {
   tagline?: string;
   logoPath?: string;
@@ -42,6 +68,7 @@ export type MediaDetails = CatalogMedia & {
   seasonsCount?: number;
   episodesCount?: number;
   episodeRuntimeMinutes?: number;
+  seasons: TvSeasonSummary[];
   status?: string;
   creators: string[];
   networks: string[];

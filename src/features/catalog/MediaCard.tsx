@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom';
 
 import { MediaPoster } from '@/components/ui/MediaPoster';
 import type { CatalogMedia } from '@/features/catalog/types';
+import { getLibraryEntryProgress, getLibraryEntryStatusLabel } from '@/features/library/hooks';
 import { createMediaDetailPath } from '@/features/media/route';
 import type { LibraryEntryRecord } from '@/types/media';
 import { listSpring } from '@/utils/motion';
@@ -17,18 +18,12 @@ function getMediaLabel(mediaType: CatalogMedia['mediaType']): string {
   return mediaType === 'movie' ? 'Film' : 'Série';
 }
 
-function getStatusLabel(entry: LibraryEntryRecord | undefined): string | undefined {
-  if (!entry) {
-    return undefined;
-  }
-
-  return entry.status === 'watchlist' ? 'À regarder' : 'Vu';
-}
-
 export function MediaCard({ media, entry }: MediaCardProps) {
   const reducedMotion = useReducedMotion();
   const Icon = media.mediaType === 'movie' ? Film : Tv;
-  const statusLabel = getStatusLabel(entry);
+  const statusLabel = entry ? getLibraryEntryStatusLabel(entry) : undefined;
+  const progress = getLibraryEntryProgress(entry);
+  const showProgress = media.mediaType === 'tv' && progress.isPartial;
 
   return (
     <motion.div
@@ -56,7 +51,22 @@ export function MediaCard({ media, entry }: MediaCardProps) {
             </span>
             {media.releaseYear ? <span>{media.releaseYear}</span> : null}
             {statusLabel ? <span className="text-brand-soft">{statusLabel}</span> : null}
+            {showProgress ? (
+              <span>
+                {progress.watched} / {progress.total}
+              </span>
+            ) : null}
           </div>
+          {showProgress ? (
+            <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-white/10">
+              <motion.span
+                className="block h-full origin-left rounded-full bg-brand"
+                initial={false}
+                animate={{ scaleX: progress.ratio }}
+                transition={reducedMotion ? { duration: 0.01 } : listSpring}
+              />
+            </span>
+          ) : null}
         </div>
       </NavLink>
     </motion.div>
