@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TvEpisode } from '@/features/catalog/types';
-import { getEpisodePreview } from '@/features/media/TvProgressSection';
+import { getEpisodePreview } from '@/features/media/episodePreview';
 
 function makeEpisodes(count: number): TvEpisode[] {
   return Array.from({ length: count }, (_, index) => {

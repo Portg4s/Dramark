@@ -11,7 +11,6 @@ import type {
 import { useTvSeasonDetails } from '@/features/media/hooks';
 import {
   createEpisodeKey,
-  type EpisodePosition,
   getDefaultSeasonNumber,
   getEffectiveWatchedEpisodes,
   getNextEpisode,
@@ -20,6 +19,7 @@ import {
   getTvViewingState,
   getWatchedEpisodeCount
 } from '@/features/media/tvProgress';
+import { getEpisodePreview } from '@/features/media/episodePreview';
 import { getTmdbImageUrl } from '@/services/tmdb/images';
 import type { LibraryEntryRecord, TvSeasonProgressMeta } from '@/types/media';
 import { motionEase, quickFade } from '@/utils/motion';
@@ -69,32 +69,7 @@ function getStateLabel(state: ReturnType<typeof getTvViewingState>): string {
 
   return 'Pas encore commencé';
 }
-export function getEpisodePreview(
-  episodes: TvEpisode[],
-  nextEpisode: EpisodePosition | undefined,
-  maxVisible = 6
-): TvEpisode[] {
-  if (episodes.length <= maxVisible) {
-    return episodes;
-  }
 
-  const nextEpisodeIndex = nextEpisode
-    ? episodes.findIndex(
-        (episode) =>
-          episode.seasonNumber === nextEpisode.seasonNumber &&
-          episode.episodeNumber === nextEpisode.episodeNumber
-      )
-    : -1;
-
-  if (nextEpisodeIndex < 0) {
-    return episodes.slice(0, maxVisible);
-  }
-
-  const maxStart = episodes.length - maxVisible;
-  const start = Math.min(Math.max(nextEpisodeIndex - Math.floor(maxVisible / 2), 0), maxStart);
-
-  return episodes.slice(start, start + maxVisible);
-}
 export function TvProgressSection({
   details,
   entry,
@@ -310,6 +285,7 @@ export function TvProgressSection({
                       type="button"
                       disabled={isBusy}
                       onClick={() => toggleEpisode(episode)}
+                      aria-pressed={isWatched}
                       initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
@@ -363,6 +339,7 @@ export function TvProgressSection({
                 onClick={() =>
                   setExpandedSeasonNumber(isEpisodeListExpanded ? undefined : activeSeasonNumber)
                 }
+                aria-expanded={isEpisodeListExpanded}
                 whileTap={reducedMotion ? undefined : { scale: 0.985 }}
                 className="pressable focus-ring mx-auto block rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/15"
               >
