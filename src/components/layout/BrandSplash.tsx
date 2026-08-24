@@ -12,6 +12,14 @@ const REDUCED_ARTWORK_VISIBLE_HOLD_MS = 500;
 const FINISH_HOLD_MS = 140;
 const IMAGE_READY_TIMEOUT_MS = 3500;
 
+function removeInitialSplashBackground() {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  document.getElementById('dramark-initial-splash-bg')?.remove();
+}
+
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | undefined> {
   return new Promise((resolve) => {
     const timer = window.setTimeout(() => resolve(undefined), timeoutMs);
@@ -56,6 +64,7 @@ export function BrandSplash() {
   const [isVisible, setIsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [isHdBackgroundVisible, setIsHdBackgroundVisible] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,6 +116,7 @@ export function BrandSplash() {
             () => {
               if (!cancelled) {
                 setIsVisible(false);
+                removeInitialSplashBackground();
               }
             },
             reducedMotion ? 80 : 320
@@ -125,19 +135,24 @@ export function BrandSplash() {
     <AnimatePresence>
       {isVisible ? (
         <motion.div
-          className="fixed inset-0 z-50 min-h-dvh overflow-hidden bg-app"
+          className="fixed inset-0 z-50 min-h-dvh overflow-hidden"
           aria-hidden="true"
           initial={{ opacity: 1 }}
           animate={{ opacity: isFinishing ? 0 : 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reducedMotion ? 0.08 : 0.32, ease: motionEase }}
         >
-          <img
+          <motion.img
             src={splashBackground}
             alt=""
             className="absolute inset-0 h-full w-full object-cover object-center"
             decoding="async"
             fetchPriority="high"
+            onLoad={() => setIsHdBackgroundVisible(true)}
+            onError={() => setIsHdBackgroundVisible(false)}
+            initial={false}
+            animate={{ opacity: isHdBackgroundVisible ? 1 : 0 }}
+            transition={{ duration: reducedMotion ? 0.01 : 0.18, ease: motionEase }}
           />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(89,183,255,0.13),transparent_16rem),linear-gradient(180deg,rgba(11,18,32,0.10)_0%,rgba(11,18,32,0.36)_58%,#0B1220_100%)]" />
           <motion.div

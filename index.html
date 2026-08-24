@@ -12,9 +12,25 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/brand/favicon-16.png" />
     <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
     <link rel="preload" as="image" href="/src/assets/brand/dramark-splash-bg.png" />
+    <style>
+      #dramark-initial-splash-bg {
+        position: fixed;
+        inset: 0;
+        z-index: 45;
+        min-height: 100vh;
+        min-height: 100dvh;
+        pointer-events: none;
+        background-color: #0b1220;
+        background-image: url('/brand/dramark-splash-placeholder.webp');
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+      }
+    </style>
     <title>Dramark</title>
   </head>
   <body>
+    <div id="dramark-initial-splash-bg" aria-hidden="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

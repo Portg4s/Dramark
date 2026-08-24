@@ -17,7 +17,8 @@ export default defineConfig(({ mode }) => {
         includeAssets: [
           'brand/favicon-16.png',
           'brand/favicon-32.png',
-          'brand/apple-touch-icon.png'
+          'brand/apple-touch-icon.png',
+          'brand/dramark-splash-placeholder.webp'
         ],
         manifest: {
           name: 'Dramark',
