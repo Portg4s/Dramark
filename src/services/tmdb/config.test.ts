@@ -1,16 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { readTmdbRuntimeConfig } from '@/services/tmdb/config';
+import { TMDB_API_BASE_URL, tmdbRuntimeConfig } from '@/services/tmdb/config';
 
-describe('readTmdbRuntimeConfig', () => {
-  it('marks TMDB as missing when no browser token is configured', () => {
-    expect(readTmdbRuntimeConfig({})).toEqual({ accessToken: undefined, isConfigured: false });
+describe('TMDB runtime config', () => {
+  it('uses the same-origin API proxy', () => {
+    expect(TMDB_API_BASE_URL).toBe('/api/tmdb');
   });
 
-  it('accepts a non-empty VITE_TMDB_ACCESS_TOKEN', () => {
-    expect(readTmdbRuntimeConfig({ VITE_TMDB_ACCESS_TOKEN: 'token' })).toEqual({
-      accessToken: 'token',
-      isConfigured: true
-    });
+  it('keeps TMDB enabled through the server-side proxy', () => {
+    expect(tmdbRuntimeConfig).toEqual({ isConfigured: true });
   });
 });
