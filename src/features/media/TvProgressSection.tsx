@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import { CheckCircle2, Circle, Loader2, Tv } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useMemo, useState } from 'react';
 
@@ -11,6 +11,7 @@ import type {
 import { useTvSeasonDetails } from '@/features/media/hooks';
 import {
   createEpisodeKey,
+  type EpisodePosition,
   getDefaultSeasonNumber,
   getEffectiveWatchedEpisodes,
   getNextEpisode,
@@ -19,6 +20,7 @@ import {
   getTvViewingState,
   getWatchedEpisodeCount
 } from '@/features/media/tvProgress';
+import { getTmdbImageUrl } from '@/services/tmdb/images';
 import type { LibraryEntryRecord, TvSeasonProgressMeta } from '@/types/media';
 import { motionEase, quickFade } from '@/utils/motion';
 
@@ -53,18 +55,7 @@ function formatEpisodeNumber(episode: TvEpisode): string {
 }
 
 function formatEpisodeMeta(episode: TvEpisode): string | undefined {
-  const values = [
-    episode.airDate
-      ? new Intl.DateTimeFormat('fr-FR', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        }).format(new Date(episode.airDate))
-      : undefined,
-    episode.runtimeMinutes ? `${episode.runtimeMinutes} min` : undefined
-  ];
-
-  return values.filter(Boolean).join(' · ') || undefined;
+  return episode.runtimeMinutes ? `~${episode.runtimeMinutes} min` : undefined;
 }
 
 function getStateLabel(state: ReturnType<typeof getTvViewingState>): string {
@@ -78,7 +69,32 @@ function getStateLabel(state: ReturnType<typeof getTvViewingState>): string {
 
   return 'Pas encore commencé';
 }
+export function getEpisodePreview(
+  episodes: TvEpisode[],
+  nextEpisode: EpisodePosition | undefined,
+  maxVisible = 6
+): TvEpisode[] {
+  if (episodes.length <= maxVisible) {
+    return episodes;
+  }
 
+  const nextEpisodeIndex = nextEpisode
+    ? episodes.findIndex(
+        (episode) =>
+          episode.seasonNumber === nextEpisode.seasonNumber &&
+          episode.episodeNumber === nextEpisode.episodeNumber
+      )
+    : -1;
+
+  if (nextEpisodeIndex < 0) {
+    return episodes.slice(0, maxVisible);
+  }
+
+  const maxStart = episodes.length - maxVisible;
+  const start = Math.min(Math.max(nextEpisodeIndex - Math.floor(maxVisible / 2), 0), maxStart);
+
+  return episodes.slice(start, start + maxVisible);
+}
 export function TvProgressSection({
   details,
   entry,
@@ -88,6 +104,7 @@ export function TvProgressSection({
   const reducedMotion = useReducedMotion();
   const seasons = useMemo(() => toSeasonMeta(details.seasons), [details.seasons]);
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | undefined>();
+  const [expandedSeasonNumber, setExpandedSeasonNumber] = useState<number | undefined>();
   const defaultSeasonNumber = useMemo(
     () => getDefaultSeasonNumber(entry, seasons),
     [entry, seasons]
@@ -156,6 +173,11 @@ export function TvProgressSection({
   }
 
   const activeSeasonEpisodes = seasonDetails.data?.episodes ?? [];
+  const isEpisodeListExpanded = expandedSeasonNumber === activeSeasonNumber;
+  const displayedEpisodes = isEpisodeListExpanded
+    ? activeSeasonEpisodes
+    : getEpisodePreview(activeSeasonEpisodes, nextEpisode);
+  const hiddenEpisodeCount = activeSeasonEpisodes.length - displayedEpisodes.length;
   const activeSeasonKeys = activeSeasonEpisodes.map((episode) =>
     createEpisodeKey(episode.seasonNumber, episode.episodeNumber)
   );
@@ -268,46 +290,88 @@ export function TvProgressSection({
         ) : null}
 
         {activeSeasonEpisodes.length > 0 ? (
-          <div className="space-y-2">
-            {activeSeasonEpisodes.map((episode) => {
-              const key = createEpisodeKey(episode.seasonNumber, episode.episodeNumber);
-              const isWatched = watchedSet.has(key);
-              const meta = formatEpisodeMeta(episode);
+          <>
+            <motion.div
+              layout={!reducedMotion}
+              className="space-y-2"
+              transition={reducedMotion ? { duration: 0.01 } : { duration: 0.22, ease: motionEase }}
+            >
+              <AnimatePresence initial={false}>
+                {displayedEpisodes.map((episode) => {
+                  const key = createEpisodeKey(episode.seasonNumber, episode.episodeNumber);
+                  const isWatched = watchedSet.has(key);
+                  const meta = formatEpisodeMeta(episode);
+                  const stillUrl = getTmdbImageUrl(episode.stillPath, 'w300');
 
-              return (
-                <motion.button
-                  key={key}
-                  type="button"
-                  disabled={isBusy}
-                  onClick={() => toggleEpisode(episode)}
-                  whileTap={reducedMotion || isBusy ? undefined : { scale: 0.988 }}
-                  className="pressable focus-ring grid w-full grid-cols-[2rem_2.8rem_1fr] items-start gap-2 rounded-[1rem] bg-white/[0.055] px-3 py-3 text-left hover:bg-white/[0.085] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <span className="pt-0.5 text-brand-soft">
-                    {isWatched ? (
-                      <CheckCircle2 aria-hidden="true" className="size-5 fill-brand/20" />
-                    ) : (
-                      <Circle aria-hidden="true" className="size-5" />
-                    )}
-                  </span>
-                  <span className="pt-0.5 text-xs font-black tabular-nums text-muted">
-                    {formatEpisodeNumber(episode)}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block line-clamp-2 text-sm font-bold leading-5 text-white">
-                      {episode.name}
-                    </span>
-                    {meta ? <span className="mt-1 block text-xs text-subtle">{meta}</span> : null}
-                    {episode.overview ? (
-                      <span className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                        {episode.overview}
+                  return (
+                    <motion.button
+                      key={key}
+                      layout={!reducedMotion}
+                      type="button"
+                      disabled={isBusy}
+                      onClick={() => toggleEpisode(episode)}
+                      initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                      transition={
+                        reducedMotion ? { duration: 0.01 } : { duration: 0.16, ease: motionEase }
+                      }
+                      whileTap={reducedMotion || isBusy ? undefined : { scale: 0.988 }}
+                      className="pressable focus-ring grid w-full grid-cols-[5.5rem_1fr_1.75rem] items-center gap-3 rounded-[1rem] bg-white/[0.055] px-3 py-2.5 text-left hover:bg-white/[0.085] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <span className="relative aspect-video w-full overflow-hidden rounded-[0.8rem] bg-surface-2/70">
+                        {stillUrl ? (
+                          <img
+                            src={stillUrl}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center bg-white/[0.045] text-subtle">
+                            <Tv aria-hidden="true" className="size-5" />
+                          </span>
+                        )}
                       </span>
-                    ) : null}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
+                      <span className="min-w-0">
+                        <span className="mb-0.5 flex items-baseline gap-2">
+                          <span className="text-xs font-black tabular-nums text-brand-soft">
+                            {formatEpisodeNumber(episode)}
+                          </span>
+                          <span className="line-clamp-1 min-w-0 flex-1 text-sm font-bold leading-5 text-white">
+                            {episode.name}
+                          </span>
+                        </span>
+                        {meta ? <span className="block text-xs text-subtle">{meta}</span> : null}
+                      </span>
+                      <span className="justify-self-end text-brand-soft">
+                        {isWatched ? (
+                          <CheckCircle2 aria-hidden="true" className="size-5 fill-brand/20" />
+                        ) : (
+                          <Circle aria-hidden="true" className="size-5" />
+                        )}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </AnimatePresence>
+            </motion.div>
+            {hiddenEpisodeCount > 0 || isEpisodeListExpanded ? (
+              <motion.button
+                type="button"
+                onClick={() =>
+                  setExpandedSeasonNumber(isEpisodeListExpanded ? undefined : activeSeasonNumber)
+                }
+                whileTap={reducedMotion ? undefined : { scale: 0.985 }}
+                className="pressable focus-ring mx-auto block rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/15"
+              >
+                {isEpisodeListExpanded
+                  ? 'R\u00e9duire'
+                  : `Voir les ${hiddenEpisodeCount} autres \u00e9pisodes`}
+              </motion.button>
+            ) : null}
+          </>
         ) : null}
       </div>
     </section>

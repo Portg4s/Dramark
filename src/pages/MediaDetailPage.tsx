@@ -354,7 +354,7 @@ export function MediaDetailPage() {
       </section>
 
       <motion.div
-        className="space-y-8 px-4 sm:px-6 lg:px-8"
+        className="space-y-8 px-4 pt-5 sm:px-6 sm:pt-6 lg:px-8"
         initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={
