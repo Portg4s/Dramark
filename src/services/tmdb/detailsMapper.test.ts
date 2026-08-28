@@ -135,7 +135,16 @@ describe('TMDB media detail mappers', () => {
         backdrop_path: '/backdrop.jpg',
         first_air_date: '2023-08-09',
         last_air_date: '2023-09-20',
-        next_episode_to_air: { air_date: '2024-01-01' },
+        next_episode_to_air: {
+          id: 501,
+          season_number: 2,
+          episode_number: 8,
+          name: 'Le retour',
+          overview: 'Une nouvelle menace approche.',
+          air_date: '2024-01-01',
+          still_path: '/next-still.jpg',
+          runtime: 44
+        },
         episode_run_time: [45],
         number_of_episodes: 20,
         number_of_seasons: 1,
@@ -233,6 +242,16 @@ describe('TMDB media detail mappers', () => {
       status: 'Ended',
       lastAirDate: '2023-09-20',
       nextAirDate: '2024-01-01',
+      nextEpisodeToAir: {
+        tmdbId: 501,
+        seasonNumber: 2,
+        episodeNumber: 8,
+        name: 'Le retour',
+        overview: 'Une nouvelle menace approche.',
+        airDate: '2024-01-01',
+        stillPath: '/next-still.jpg',
+        runtimeMinutes: 44
+      },
       watchProviders: [
         {
           type: 'buy',

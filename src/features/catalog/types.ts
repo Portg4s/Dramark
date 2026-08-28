@@ -86,4 +86,5 @@ export type MediaDetails = CatalogMedia & {
   networks: string[];
   lastAirDate?: string;
   nextAirDate?: string;
+  nextEpisodeToAir?: TvEpisode;
 };

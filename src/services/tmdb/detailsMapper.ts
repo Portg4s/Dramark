@@ -14,6 +14,7 @@ import type {
   TmdbMovieDetailsResponse,
   TmdbNamedEntity,
   TmdbProductionCountry,
+  TmdbTvEpisode,
   TmdbTvDetailsResponse,
   TmdbTvSeasonDetailsResponse,
   TmdbTvSeasonSummary,
@@ -187,6 +188,28 @@ function mapTvSeasonSummary(season: TmdbTvSeasonSummary): TvSeasonSummary | unde
   };
 }
 
+function mapTvEpisode(
+  episode: TmdbTvEpisode,
+  fallbackSeasonNumber?: number
+): TvSeasonDetails['episodes'][number] | undefined {
+  const episodeNumber = cleanNumber(episode.episode_number);
+
+  if (episodeNumber === undefined) {
+    return undefined;
+  }
+
+  return {
+    tmdbId: episode.id,
+    seasonNumber: cleanNumber(episode.season_number) ?? fallbackSeasonNumber ?? 0,
+    episodeNumber,
+    name: cleanOptionalText(episode.name) ?? `Épisode ${episodeNumber}`,
+    overview: cleanOptionalText(episode.overview),
+    airDate: cleanOptionalText(episode.air_date),
+    stillPath: cleanOptionalText(episode.still_path),
+    runtimeMinutes: cleanNumber(episode.runtime)
+  };
+}
+
 export function mapTmdbMovieDetailsToMediaDetails(movie: TmdbMovieDetailsResponse): MediaDetails {
   const title =
     cleanOptionalText(movie.title) ?? cleanOptionalText(movie.original_title) ?? 'Titre inconnu';
@@ -263,7 +286,8 @@ export function mapTmdbTvDetailsToMediaDetails(show: TmdbTvDetailsResponse): Med
     networks: cleanNames(show.networks),
     cast: mapTvCast(show.aggregate_credits?.cast, undefined),
     lastAirDate: cleanOptionalText(show.last_air_date),
-    nextAirDate: cleanOptionalText(show.next_episode_to_air?.air_date)
+    nextAirDate: cleanOptionalText(show.next_episode_to_air?.air_date),
+    nextEpisodeToAir: show.next_episode_to_air ? mapTvEpisode(show.next_episode_to_air) : undefined
   };
 }
 

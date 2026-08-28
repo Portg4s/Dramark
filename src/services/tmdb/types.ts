@@ -182,7 +182,7 @@ export type TmdbTvDetailsResponse = TmdbDiscoverResultBase & {
   original_name?: string | null;
   first_air_date?: string | null;
   last_air_date?: string | null;
-  next_episode_to_air?: { air_date?: string | null } | null;
+  next_episode_to_air?: TmdbTvEpisode | null;
   episode_run_time?: number[] | null;
   number_of_episodes?: number | null;
   number_of_seasons?: number | null;

@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppShell } from '@/components/layout/AppShell';
+import { CalendarPage } from '@/pages/CalendarPage';
 import { HomePage } from '@/pages/HomePage';
 import { LibraryPage } from '@/pages/LibraryPage';
 import { MediaDetailPage } from '@/pages/MediaDetailPage';
@@ -14,6 +15,7 @@ export function App() {
         <Route index element={<HomePage />} />
         <Route path="recherche" element={<SearchPage />} />
         <Route path="liste" element={<LibraryPage />} />
+        <Route path="calendrier" element={<CalendarPage />} />
         <Route path="reglages" element={<SettingsPage />} />
         <Route path="media/:mediaType/:tmdbId" element={<MediaDetailPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

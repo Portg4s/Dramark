@@ -1,4 +1,4 @@
-import { Home, Library, Search, Settings } from 'lucide-react';
+import { CalendarDays, Home, Library, Search, Settings } from 'lucide-react';
 import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { NavLink } from 'react-router-dom';
 
@@ -15,6 +15,7 @@ const navItems: NavigationItem[] = [
   { to: '/', label: 'Accueil', icon: Home, end: true },
   { to: '/recherche', label: 'Recherche', icon: Search },
   { to: '/liste', label: 'Ma liste', icon: Library },
+  { to: '/calendrier', label: 'Calendrier', icon: CalendarDays },
   { to: '/reglages', label: 'Réglages', icon: Settings }
 ] as const;
 
@@ -27,7 +28,7 @@ export function BottomNavigation() {
       className="fixed inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.65rem+env(safe-area-inset-bottom))] pt-2 lg:hidden"
     >
       <LayoutGroup id="bottom-navigation">
-        <div className="mx-auto grid max-w-md grid-cols-4 rounded-[1.65rem] border border-white/8 bg-surface/82 p-1.5 shadow-nav backdrop-blur-2xl">
+        <div className="mx-auto grid max-w-md grid-cols-5 rounded-[1.65rem] border border-white/8 bg-surface/82 p-1.5 shadow-nav backdrop-blur-2xl">
           {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}

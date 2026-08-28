@@ -1,0 +1,87 @@
+import { useQueries } from '@tanstack/react-query';
+
+import type { MediaDetails } from '@/features/catalog/types';
+import { useLibraryEntries } from '@/features/library/hooks';
+import { mediaDetailQueryKeys } from '@/features/media/hooks';
+import { tmdbClient } from '@/services/tmdb/client';
+import { tmdbRuntimeConfig } from '@/services/tmdb/config';
+import { getMediaDetails } from '@/services/tmdb/details';
+
+export type CalendarTimelineItem = {
+  id: string;
+  mediaType: 'tv';
+  tmdbId: number;
+  title: string;
+  posterPath?: string;
+  airDate: string;
+  episodeCode: string;
+  episodeName?: string;
+  providerLabel?: string;
+};
+
+function formatEpisodeCode(details: MediaDetails): string | undefined {
+  const episode = details.nextEpisodeToAir;
+
+  if (!episode) {
+    return undefined;
+  }
+
+  return `S${episode.seasonNumber}E${episode.episodeNumber}`;
+}
+
+function getTodayIsoDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, '0');
+  const day = `${now.getDate()}`.padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function mapDetailsToTimelineItem(details: MediaDetails): CalendarTimelineItem | undefined {
+  const episode = details.nextEpisodeToAir;
+  const episodeCode = formatEpisodeCode(details);
+
+  if (!episode?.airDate || !episodeCode || episode.airDate < getTodayIsoDate()) {
+    return undefined;
+  }
+
+  return {
+    id: `${details.mediaType}:${details.tmdbId}:${episode.seasonNumber}:${episode.episodeNumber}`,
+    mediaType: 'tv',
+    tmdbId: details.tmdbId,
+    title: details.title,
+    posterPath: details.posterPath,
+    airDate: episode.airDate,
+    episodeCode,
+    episodeName: episode.name,
+    providerLabel: details.networks[0]
+  };
+}
+
+export function useCalendarTimeline() {
+  const watchlist = useLibraryEntries('watchlist');
+  const tvEntries = (watchlist.data ?? []).filter((entry) => entry.mediaType === 'tv');
+  const detailsQueries = useQueries({
+    queries: tvEntries.map((entry) => ({
+      queryKey: mediaDetailQueryKeys.detail('tv', entry.tmdbId),
+      queryFn: () => getMediaDetails(tmdbClient, 'tv', entry.tmdbId),
+      enabled: tmdbRuntimeConfig.isConfigured,
+      staleTime: 1000 * 60 * 60,
+      gcTime: 1000 * 60 * 90,
+      retry: 1
+    }))
+  });
+
+  const items = detailsQueries
+    .map((query) => query.data)
+    .filter((details): details is MediaDetails => Boolean(details))
+    .map(mapDetailsToTimelineItem)
+    .filter((item): item is CalendarTimelineItem => Boolean(item))
+    .sort((first, second) => first.airDate.localeCompare(second.airDate));
+
+  return {
+    items,
+    isLoading: watchlist.isLoading || detailsQueries.some((query) => query.isLoading)
+  };
+}
