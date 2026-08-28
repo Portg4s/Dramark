@@ -13,7 +13,6 @@ import { TrendingRail } from '@/features/discovery/TrendingRail';
 import {
   getLibraryEntryProgress,
   mapLibraryEntryToCatalogMedia,
-  useLibraryCounts,
   useLibraryEntries
 } from '@/features/library/hooks';
 import { sortLibraryEntries } from '@/features/library/sorting';
@@ -176,7 +175,6 @@ export function HomePage() {
   const reducedMotion = useReducedMotion();
   const [discoveryFilter, setDiscoveryFilter] = useState<DiscoveryFilterKey>('all');
   const [discoverySort, setDiscoverySort] = useState<DiscoverySortKey>('trending');
-  const counts = useLibraryCounts();
   const watchlist = useLibraryEntries('watchlist');
   const watched = useLibraryEntries('watched');
   const discovery = useDiscoveryMedia(discoveryFilter, discoverySort);
@@ -218,10 +216,15 @@ export function HomePage() {
             loading="eager"
             decoding="async"
           />
-          <p className="mt-4 rounded-full bg-black/24 px-4 py-2 text-sm font-semibold text-white/88 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-            <AnimatedCount value={counts.watched} /> vus{' '}
+          <p
+            className="mt-4 rounded-full bg-black/24 px-4 py-2 text-sm font-semibold text-white/88 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl"
+            aria-label={`${watchedEntries.length} vus, ${continueEntries.length} en cours, ${pureWatchlistEntries.length} à regarder`}
+          >
+            <AnimatedCount value={watchedEntries.length} /> vus{' '}
             <span className="px-2 text-brand-soft/75">·</span>{' '}
-            <AnimatedCount value={counts.watchlist} /> à regarder
+            <AnimatedCount value={continueEntries.length} /> en cours{' '}
+            <span className="px-2 text-brand-soft/75">·</span>{' '}
+            <AnimatedCount value={pureWatchlistEntries.length} /> à regarder
           </p>
         </div>
       </motion.header>

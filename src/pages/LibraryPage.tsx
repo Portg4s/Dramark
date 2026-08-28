@@ -4,20 +4,25 @@ import { useMemo, useState } from 'react';
 
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import {
+  getLibraryEntryProgress,
   mapLibraryEntryToCatalogMedia,
-  useLibraryCounts,
   useLibraryEntries,
   useLibraryMediaActions
 } from '@/features/library/hooks';
 import { LibraryMediaItem } from '@/features/library/LibraryMediaItem';
 import { filterLibraryEntries, type LibraryMediaTypeFilter } from '@/features/library/filtering';
 import { sortLibraryEntries, type LibrarySort } from '@/features/library/sorting';
-import type { LibraryStatus } from '@/types/media';
+import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
 import { listSpring, motionEase, quickFade, softSpring } from '@/utils/motion';
 
+type LibraryView = LibraryStatus | 'in_progress';
+
+const emptyLibraryEntries: LibraryEntryRecord[] = [];
+
 const tabs = [
-  { status: 'watchlist', label: 'À regarder' },
-  { status: 'watched', label: 'Vu' }
+  { view: 'watchlist', label: 'À regarder' },
+  { view: 'in_progress', label: 'En cours' },
+  { view: 'watched', label: 'Vu' }
 ] as const;
 
 const sortOptions = [
@@ -43,6 +48,14 @@ function getEmptyMessage(status: LibraryStatus): string {
     : 'Les films et séries que vous terminez apparaîtront ici.';
 }
 
+function getViewEmptyMessage(view: LibraryView): string {
+  if (view === 'in_progress') {
+    return 'Les séries commencées apparaîtront ici.';
+  }
+
+  return getEmptyMessage(view);
+}
+
 function AnimatedCount({ value, className = '' }: { value: number; className?: string }) {
   const reducedMotion = useReducedMotion();
 
@@ -63,26 +76,49 @@ function AnimatedCount({ value, className = '' }: { value: number; className?: s
 }
 
 export function LibraryPage() {
-  const [activeStatus, setActiveStatus] = useState<LibraryStatus>('watchlist');
+  const [activeView, setActiveView] = useState<LibraryView>('watchlist');
   const [sort, setSort] = useState<LibrarySort>('recent');
   const [mediaTypeFilter, setMediaTypeFilter] = useState<LibraryMediaTypeFilter>('all');
   const [libraryQuery, setLibraryQuery] = useState('');
   const reducedMotion = useReducedMotion();
-  const entries = useLibraryEntries(activeStatus);
-  const counts = useLibraryCounts();
+  const watchlistQuery = useLibraryEntries('watchlist');
+  const watchedQuery = useLibraryEntries('watched');
   const libraryActions = useLibraryMediaActions();
 
+  const watchlistEntries = watchlistQuery.data ?? emptyLibraryEntries;
+  const watchedEntries = watchedQuery.data ?? emptyLibraryEntries;
+  const inProgressEntries = useMemo(
+    () => watchlistEntries.filter((entry) => getLibraryEntryProgress(entry).isPartial),
+    [watchlistEntries]
+  );
+  const unstartedWatchlistEntries = useMemo(
+    () => watchlistEntries.filter((entry) => !getLibraryEntryProgress(entry).isPartial),
+    [watchlistEntries]
+  );
+  const activeEntries =
+    activeView === 'watched'
+      ? watchedEntries
+      : activeView === 'in_progress'
+        ? inProgressEntries
+        : unstartedWatchlistEntries;
+  const counts = {
+    watchlist: unstartedWatchlistEntries.length,
+    in_progress: inProgressEntries.length,
+    watched: watchedEntries.length
+  } satisfies Record<LibraryView, number>;
   const sortedEntries = useMemo(() => {
-    const filteredEntries = filterLibraryEntries(entries.data ?? [], {
+    const filteredEntries = filterLibraryEntries(activeEntries, {
       mediaType: mediaTypeFilter,
       query: libraryQuery
     });
 
     return sortLibraryEntries(filteredEntries, sort);
-  }, [entries.data, libraryQuery, mediaTypeFilter, sort]);
-  const direction = activeStatus === 'watched' ? 1 : -1;
+  }, [activeEntries, libraryQuery, mediaTypeFilter, sort]);
+  const activeTabIndex = tabs.findIndex((tab) => tab.view === activeView);
+  const direction = activeTabIndex === 2 ? 1 : -1;
   const selectedSort = sortOptions.find((option) => option.value === sort) ?? sortOptions[0];
   const hasActiveFilters = mediaTypeFilter !== 'all' || libraryQuery.trim().length > 0;
+  const activeQuery = activeView === 'watched' ? watchedQuery : watchlistQuery;
 
   return (
     <div className="space-y-6">
@@ -93,26 +129,29 @@ export function LibraryPage() {
         </div>
         <p className="text-sm font-medium text-muted">
           <AnimatedCount value={counts.watchlist} /> à regarder{' '}
-          <span className="px-2 text-subtle">·</span> <AnimatedCount value={counts.watched} /> vus
+          <span className="px-2 text-subtle">·</span> <AnimatedCount value={counts.in_progress} />{' '}
+          en cours <span className="px-2 text-subtle">·</span>{' '}
+          <AnimatedCount value={counts.watched} /> vus
         </p>
       </header>
 
       <LayoutGroup id="library-tabs">
-        <div className="relative grid grid-cols-2 rounded-full bg-surface/72 p-1">
-          {tabs.map(({ status, label }) => {
-            const count = status === 'watchlist' ? counts.watchlist : counts.watched;
-            const isActive = activeStatus === status;
+        <div className="relative grid grid-cols-3 rounded-full bg-surface/72 p-1">
+          {tabs.map(({ view, label }) => {
+            const count = counts[view];
+            const isActive = activeView === view;
 
             return (
               <button
-                key={status}
+                key={view}
                 type="button"
-                onClick={() => setActiveStatus(status)}
+                onClick={() => setActiveView(view)}
                 className={[
-                  'focus-ring relative z-10 flex min-h-12 items-center justify-center gap-2 rounded-full px-3 text-sm font-bold transition-colors duration-200',
+                  'focus-ring relative z-10 flex min-h-12 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-bold transition-colors duration-200',
                   isActive ? 'text-white' : 'text-muted hover:text-white'
                 ].join(' ')}
                 aria-pressed={isActive}
+                aria-label={`${label} ${count}`}
               >
                 {isActive ? (
                   <motion.span
@@ -200,14 +239,14 @@ export function LibraryPage() {
 
       <AnimatePresence mode="wait" initial={false} custom={direction}>
         <motion.div
-          key={activeStatus}
+          key={activeView}
           custom={direction}
           initial={reducedMotion ? { opacity: 0 } : { opacity: 0, x: direction > 0 ? 24 : -24 }}
           animate={{ opacity: 1, x: 0 }}
           exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: direction > 0 ? -24 : 24 }}
           transition={{ duration: reducedMotion ? 0.12 : 0.28, ease: motionEase }}
         >
-          {entries.isLoading ? (
+          {activeQuery.isLoading ? (
             <div
               role="status"
               className="rounded-[1.35rem] bg-surface/64 px-5 py-6 text-sm text-muted"
@@ -216,24 +255,24 @@ export function LibraryPage() {
             </div>
           ) : null}
 
-          {entries.error ? (
+          {activeQuery.error ? (
             <div className="rounded-[1.35rem] bg-danger/12 px-5 py-4 text-sm text-red-100">
               Impossible de lire la bibliothèque locale pour le moment.
             </div>
           ) : null}
 
-          {!entries.isLoading && !entries.error && sortedEntries.length === 0 ? (
+          {!activeQuery.isLoading && !activeQuery.error && sortedEntries.length === 0 ? (
             <div className="rounded-[1.35rem] bg-surface/64 px-5 py-8 text-center">
               <p className="text-sm font-medium text-muted">
                 {hasActiveFilters
                   ? 'Aucun titre ne correspond a ces filtres.'
-                  : getEmptyMessage(activeStatus)}
+                  : getViewEmptyMessage(activeView)}
               </p>
             </div>
           ) : null}
 
           {sortedEntries.length > 0 ? (
-            <LayoutGroup id={`library-list-${activeStatus}`}>
+            <LayoutGroup id={`library-list-${activeView}`}>
               <motion.div layout className="space-y-3" transition={listSpring}>
                 <AnimatePresence mode="popLayout" initial={false}>
                   {sortedEntries.map((entry) => {

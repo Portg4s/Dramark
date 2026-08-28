@@ -65,7 +65,10 @@ vi.mock('@/features/library/hooks', async () => {
 
   return {
     ...actual,
-    useLibraryCounts: () => ({ watchlist: 1, watched: 1 }),
+    useLibraryCounts: () => ({
+      watchlist: libraryEntries.watchlist.length,
+      watched: libraryEntries.watched.length
+    }),
     useLibraryEntries: (status?: LibraryStatus) => ({
       data: status
         ? libraryEntries[status]
@@ -78,6 +81,28 @@ describe('HomePage', () => {
   beforeEach(() => {
     discoveryMock.selectedFilters = [];
     discoveryMock.selectedSorts = [];
+    libraryEntries.watchlist = [
+      {
+        id: 'tv:1',
+        mediaType: 'tv',
+        tmdbId: 1,
+        status: 'watchlist',
+        addedAt: '2026-08-24T10:00:00.000Z',
+        updatedAt: '2026-08-24T10:00:00.000Z',
+        snapshot: { title: 'Moving On', releaseYear: 2026 }
+      }
+    ];
+    libraryEntries.watched = [
+      {
+        id: 'movie:2',
+        mediaType: 'movie',
+        tmdbId: 2,
+        status: 'watched',
+        addedAt: '2026-08-24T10:00:00.000Z',
+        updatedAt: '2026-08-24T10:00:00.000Z',
+        snapshot: { title: 'Whisper', releaseYear: 2007 }
+      }
+    ];
   });
 
   afterEach(() => {
@@ -140,6 +165,34 @@ describe('HomePage', () => {
     );
 
     expect(screen.getByText('8.2')).toBeInTheDocument();
+  });
+
+  it('shows in-progress titles as their own home count', () => {
+    libraryEntries.watchlist = [
+      ...libraryEntries.watchlist,
+      {
+        id: 'tv:3',
+        mediaType: 'tv',
+        tmdbId: 3,
+        status: 'watchlist',
+        addedAt: '2026-08-24T12:00:00.000Z',
+        updatedAt: '2026-08-24T12:00:00.000Z',
+        snapshot: { title: 'Long Anime', releaseYear: 2026 },
+        tvProgress: {
+          watchedEpisodes: ['1:1'],
+          seasons: [{ seasonNumber: 1, episodeCount: 12 }],
+          updatedAt: '2026-08-24T12:00:00.000Z'
+        }
+      }
+    ];
+
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByLabelText('1 vus, 1 en cours, 1 à regarder')).toBeInTheDocument();
   });
 
   it('lets the discovery rail switch sort modes', async () => {

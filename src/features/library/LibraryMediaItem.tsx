@@ -42,6 +42,28 @@ function getPrimaryActionLabel(status: LibraryStatus): string {
   return status === 'watched' ? 'Marquer vu' : 'À regarder';
 }
 
+function formatNextEpisodeLabel(
+  progress: ReturnType<typeof getLibraryEntryProgress>
+): string | undefined {
+  if (!progress.nextEpisode) {
+    return undefined;
+  }
+
+  return `Saison ${progress.nextEpisode.seasonNumber} · Épisode ${progress.nextEpisode.episodeNumber}`;
+}
+
+function formatRemainingEpisodes(
+  progress: ReturnType<typeof getLibraryEntryProgress>
+): string | undefined {
+  const remaining = progress.total - progress.watched;
+
+  if (remaining <= 0) {
+    return undefined;
+  }
+
+  return `${remaining} épisode${remaining > 1 ? 's' : ''} restant${remaining > 1 ? 's' : ''}`;
+}
+
 function StatusButton({
   active,
   ariaLabel,
@@ -92,6 +114,8 @@ export function LibraryMediaItem({
   const statusLabel = getLibraryEntryStatusLabel(entry);
   const progress = getLibraryEntryProgress(entry);
   const showProgress = media.mediaType === 'tv' && progress.isPartial;
+  const nextEpisodeLabel = showProgress ? formatNextEpisodeLabel(progress) : undefined;
+  const remainingEpisodesLabel = showProgress ? formatRemainingEpisodes(progress) : undefined;
   const detailPath = createMediaDetailPath(media.mediaType, media.tmdbId);
   const exitX = entry?.status === 'watchlist' ? 28 : -28;
 
@@ -158,14 +182,22 @@ export function LibraryMediaItem({
                 ) : null}
               </p>
               {showProgress ? (
-                <span className="block h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <motion.span
-                    className="block h-full origin-left rounded-full bg-brand"
-                    initial={false}
-                    animate={{ scaleX: progress.ratio }}
-                    transition={reducedMotion ? { duration: 0.01 } : quickFade}
-                  />
-                </span>
+                <>
+                  {nextEpisodeLabel ? (
+                    <p className="text-xs font-semibold text-white/82">{nextEpisodeLabel}</p>
+                  ) : null}
+                  {remainingEpisodesLabel ? (
+                    <p className="text-xs text-muted">{remainingEpisodesLabel}</p>
+                  ) : null}
+                  <span className="block h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <motion.span
+                      className="block h-full origin-left rounded-full bg-brand"
+                      initial={false}
+                      animate={{ scaleX: progress.ratio }}
+                      transition={reducedMotion ? { duration: 0.01 } : quickFade}
+                    />
+                  </span>
+                </>
               ) : null}
             </motion.div>
           </NavLink>
