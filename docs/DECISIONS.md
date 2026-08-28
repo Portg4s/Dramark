@@ -55,3 +55,11 @@ Decision : Dramark ne determine plus automatiquement quels contenus sont disponi
 Raison : le besoin reel est le suivi personnel, et une recherche TMDB suffit pour ajouter les contenus vus ou reperes par l'utilisateur. Les sources tierces de disponibilite Viki France sont incompletes ou ajoutent une complexite injustifiee pour un petit produit personnel.
 
 Consequences : Dramark ne pretend pas representer le catalogue Viki France. TMDB devient la source distante pour la recherche et les metadonnees ; la disponibilite Viki reste une connaissance externe de l'utilisateur.
+
+## Watch providers France sur les fiches
+
+Decision : afficher les watch providers France disponibles via TMDB/JustWatch sur les fiches media, au niveau global du film ou de la serie.
+
+Raison : cela enrichit la decision de visionnage sans ajouter de backend, de compte ou de synchronisation, et sans multiplier les appels par saison.
+
+Consequences : Dramark indique des plateformes possibles quand TMDB fournit la donnee FR, mais ne garantit pas l'exhaustivite ni la disponibilite exacte de chaque saison.

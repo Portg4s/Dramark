@@ -56,12 +56,24 @@ export type TvSeasonDetails = {
   episodes: TvEpisode[];
 };
 
+export type WatchProviderType = 'flatrate' | 'free' | 'ads' | 'rent' | 'buy';
+
+export type WatchProviderOffer = {
+  type: WatchProviderType;
+  label: string;
+  providerId: number;
+  providerName: string;
+  logoPath?: string;
+  displayPriority?: number;
+};
+
 export type MediaDetails = CatalogMedia & {
   tagline?: string;
   logoPath?: string;
   galleryBackdropPaths: string[];
   genres: string[];
   voteCount?: number;
+  watchProviders: WatchProviderOffer[];
   cast: MediaCastMember[];
   runtimeMinutes?: number;
   directors: string[];

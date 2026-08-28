@@ -25,6 +25,29 @@ describe('TMDB media detail mappers', () => {
         vote_average: 7.4,
         vote_count: 1200,
         popularity: 31.2,
+        watch_providers: {
+          results: {
+            FR: {
+              link: 'https://www.themoviedb.org/movie/42/watch',
+              flatrate: [
+                {
+                  provider_id: 8,
+                  provider_name: 'Netflix',
+                  logo_path: '/netflix.jpg',
+                  display_priority: 1
+                }
+              ],
+              rent: [
+                {
+                  provider_id: 337,
+                  provider_name: 'Disney Plus',
+                  logo_path: '/disney.jpg',
+                  display_priority: 2
+                }
+              ]
+            }
+          }
+        },
         images: {
           logos: [
             { file_path: '/logo-en.png', iso_639_1: 'en', vote_average: 8 },
@@ -69,6 +92,24 @@ describe('TMDB media detail mappers', () => {
       voteCount: 1200,
       runtimeMinutes: 138,
       directors: ['Park Chan-wook'],
+      watchProviders: [
+        {
+          type: 'flatrate',
+          label: 'Streaming',
+          providerId: 8,
+          providerName: 'Netflix',
+          logoPath: '/netflix.jpg',
+          displayPriority: 1
+        },
+        {
+          type: 'rent',
+          label: 'Location',
+          providerId: 337,
+          providerName: 'Disney Plus',
+          logoPath: '/disney.jpg',
+          displayPriority: 2
+        }
+      ],
       seasons: [],
       creators: [],
       networks: [],
@@ -125,6 +166,20 @@ describe('TMDB media detail mappers', () => {
         networks: [{ id: 30, name: 'Disney+' }],
         vote_average: 8.4,
         vote_count: 500,
+        watch_providers: {
+          results: {
+            FR: {
+              buy: [
+                {
+                  provider_id: 2,
+                  provider_name: 'Apple TV',
+                  logo_path: '/apple.jpg',
+                  display_priority: 3
+                }
+              ]
+            }
+          }
+        },
         images: {
           logos: [{ file_path: '/logo.png', iso_639_1: null, vote_average: 7 }],
           backdrops: [{ file_path: '/gallery.jpg', width: 1000, vote_average: 8 }]
@@ -178,6 +233,16 @@ describe('TMDB media detail mappers', () => {
       status: 'Ended',
       lastAirDate: '2023-09-20',
       nextAirDate: '2024-01-01',
+      watchProviders: [
+        {
+          type: 'buy',
+          label: 'Achat',
+          providerId: 2,
+          providerName: 'Apple TV',
+          logoPath: '/apple.jpg',
+          displayPriority: 3
+        }
+      ],
       creators: ['Kang Full'],
       networks: ['Disney+'],
       cast: [

@@ -31,6 +31,16 @@ const tvDetails: MediaDetails = {
   directors: [],
   creators: [],
   networks: ['ONE 31'],
+  watchProviders: [
+    {
+      type: 'flatrate',
+      label: 'Streaming',
+      providerId: 8,
+      providerName: 'Netflix',
+      logoPath: '/netflix.jpg',
+      displayPriority: 1
+    }
+  ],
   cast: [],
   seasonsCount: 1,
   episodesCount: 2,
@@ -123,5 +133,16 @@ describe('MediaDetailPage', () => {
     expect(
       screen.getByRole('heading', { name: 'Whisper of Desire' }).closest('section')
     ).toHaveClass('overflow-visible');
+  });
+
+  it('shows French watch providers on the detail page', () => {
+    renderMediaDetailPage();
+
+    expect(screen.getByRole('heading', { name: 'Regarder sur' })).toBeInTheDocument();
+    expect(screen.getByText('Streaming')).toBeInTheDocument();
+    expect(screen.getByAltText('Netflix')).toHaveAttribute(
+      'src',
+      'https://image.tmdb.org/t/p/w92/netflix.jpg'
+    );
   });
 });

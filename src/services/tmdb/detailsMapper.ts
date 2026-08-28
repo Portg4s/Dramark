@@ -1,4 +1,10 @@
-import type { MediaDetails, TvSeasonDetails, TvSeasonSummary } from '@/features/catalog/types';
+import type {
+  MediaDetails,
+  TvSeasonDetails,
+  TvSeasonSummary,
+  WatchProviderOffer,
+  WatchProviderType
+} from '@/features/catalog/types';
 import type {
   TmdbAggregateCast,
   TmdbCreditCast,
@@ -10,8 +16,18 @@ import type {
   TmdbProductionCountry,
   TmdbTvDetailsResponse,
   TmdbTvSeasonDetailsResponse,
-  TmdbTvSeasonSummary
+  TmdbTvSeasonSummary,
+  TmdbWatchProvider,
+  TmdbWatchProvidersResponse
 } from '@/services/tmdb/types';
+
+const watchProviderGroups: Array<{ type: WatchProviderType; label: string }> = [
+  { type: 'flatrate', label: 'Streaming' },
+  { type: 'free', label: 'Gratuit' },
+  { type: 'ads', label: 'Avec pub' },
+  { type: 'rent', label: 'Location' },
+  { type: 'buy', label: 'Achat' }
+];
 
 function cleanOptionalText(value: string | null | undefined): string | undefined {
   const cleanValue = value?.trim();
@@ -113,6 +129,45 @@ function pickGalleryBackdrops(backdrops: TmdbImageMetadata[] | null | undefined)
     .slice(0, 6);
 }
 
+function mapWatchProvider(
+  provider: TmdbWatchProvider,
+  type: WatchProviderType,
+  label: string
+): WatchProviderOffer | undefined {
+  const providerId = cleanNumber(provider.provider_id);
+  const providerName = cleanOptionalText(provider.provider_name);
+
+  if (providerId === undefined || !providerName) {
+    return undefined;
+  }
+
+  return {
+    type,
+    label,
+    providerId,
+    providerName,
+    logoPath: cleanOptionalText(provider.logo_path),
+    displayPriority: cleanNumber(provider.display_priority)
+  };
+}
+
+function mapWatchProviders(
+  watchProviders: TmdbWatchProvidersResponse | null | undefined
+): WatchProviderOffer[] {
+  const frenchProviders = watchProviders?.results?.FR;
+
+  if (!frenchProviders) {
+    return [];
+  }
+
+  return watchProviderGroups.flatMap(({ type, label }) =>
+    [...(frenchProviders[type] ?? [])]
+      .sort((first, second) => (first.display_priority ?? 999) - (second.display_priority ?? 999))
+      .map((provider) => mapWatchProvider(provider, type, label))
+      .filter((provider): provider is WatchProviderOffer => Boolean(provider))
+  );
+}
+
 function mapTvSeasonSummary(season: TmdbTvSeasonSummary): TvSeasonSummary | undefined {
   const seasonNumber = cleanNumber(season.season_number);
 
@@ -157,6 +212,7 @@ export function mapTmdbMovieDetailsToMediaDetails(movie: TmdbMovieDetailsRespons
     galleryBackdropPaths: pickGalleryBackdrops(movie.images?.backdrops),
     genres: cleanNames(movie.genres),
     voteCount: cleanNumber(movie.vote_count),
+    watchProviders: mapWatchProviders(movie.watch_providers),
     runtimeMinutes: cleanNumber(movie.runtime),
     directors: getDirectors(movie.credits?.crew),
     seasons: [],
@@ -196,6 +252,7 @@ export function mapTmdbTvDetailsToMediaDetails(show: TmdbTvDetailsResponse): Med
     galleryBackdropPaths: pickGalleryBackdrops(show.images?.backdrops),
     genres: cleanNames(show.genres),
     voteCount: cleanNumber(show.vote_count),
+    watchProviders: mapWatchProviders(show.watch_providers),
     seasonsCount: cleanNumber(show.number_of_seasons),
     episodesCount: cleanNumber(show.number_of_episodes),
     episodeRuntimeMinutes: cleanNumber(episodeRuntime),

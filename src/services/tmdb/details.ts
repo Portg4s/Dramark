@@ -19,7 +19,7 @@ export async function getMediaDetails(
 ): Promise<MediaDetails> {
   if (mediaType === 'movie') {
     const response = await client.request<TmdbMovieDetailsResponse>(`/movie/${tmdbId}`, {
-      append_to_response: 'credits,images',
+      append_to_response: 'credits,images,watch/providers',
       include_image_language: 'fr,en,null'
     });
 
@@ -27,7 +27,7 @@ export async function getMediaDetails(
   }
 
   const response = await client.request<TmdbTvDetailsResponse>(`/tv/${tmdbId}`, {
-    append_to_response: 'aggregate_credits,images',
+    append_to_response: 'aggregate_credits,images,watch/providers',
     include_image_language: 'fr,en,null'
   });
 

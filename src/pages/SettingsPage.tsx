@@ -6,7 +6,7 @@ import { createDatedExportFileName, downloadTextFile } from '@/features/settings
 import { exportLibraryData, importLibraryData } from '@/features/settings/importExport';
 
 const passiveSettingsItems = [
-  { label: 'Crédits et attributions', detail: 'TMDB', icon: Info }
+  { label: 'Crédits et attributions', detail: 'TMDB et JustWatch', icon: Info }
 ] as const;
 
 export function SettingsPage() {
@@ -178,7 +178,8 @@ export function SettingsPage() {
       <section className="rounded-[1.35rem] bg-white/[0.045] px-4 py-4">
         <h2 className="text-sm font-bold text-white">Crédits</h2>
         <p className="mt-2 text-xs leading-6 text-subtle">
-          This product uses the TMDB API but is not endorsed or certified by TMDB.
+          This product uses the TMDB API but is not endorsed or certified by TMDB. Watch provider
+          data is supplied by JustWatch via TMDB.
         </p>
       </section>
     </div>

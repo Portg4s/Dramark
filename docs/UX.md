@@ -50,7 +50,7 @@ Recherche textuelle TMDB films + series, minimum 2 caracteres, resultats mobiles
 
 ### Fiche media
 
-Ecran immersif avec grand backdrop, poster, titre, titre original, annee, pays, genres, note TMDB, actions `A regarder` et `Vu`, synopsis, informations essentielles et rail de casting. Pas de suivi episode.
+Ecran immersif avec grand backdrop, poster, titre, titre original, annee, pays, genres, note TMDB, actions `A regarder` et `Vu`, disponibilites France `Regarder sur`, synopsis, informations essentielles et rail de casting.
 
 ### Ma liste
 

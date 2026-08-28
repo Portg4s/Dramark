@@ -116,6 +116,26 @@ export type TmdbImagesResponse = {
   logos?: TmdbImageMetadata[] | null;
 };
 
+export type TmdbWatchProvider = {
+  provider_id?: number | null;
+  provider_name?: string | null;
+  logo_path?: string | null;
+  display_priority?: number | null;
+};
+
+export type TmdbWatchProviderRegion = {
+  link?: string | null;
+  flatrate?: TmdbWatchProvider[] | null;
+  free?: TmdbWatchProvider[] | null;
+  ads?: TmdbWatchProvider[] | null;
+  rent?: TmdbWatchProvider[] | null;
+  buy?: TmdbWatchProvider[] | null;
+};
+
+export type TmdbWatchProvidersResponse = {
+  results?: Record<string, TmdbWatchProviderRegion | undefined> | null;
+};
+
 export type TmdbTvSeasonSummary = {
   id: number;
   season_number?: number | null;
@@ -154,6 +174,7 @@ export type TmdbMovieDetailsResponse = TmdbDiscoverResultBase & {
   vote_count?: number | null;
   credits?: TmdbCreditsResponse | null;
   images?: TmdbImagesResponse | null;
+  watch_providers?: TmdbWatchProvidersResponse | null;
 };
 
 export type TmdbTvDetailsResponse = TmdbDiscoverResultBase & {
@@ -175,6 +196,7 @@ export type TmdbTvDetailsResponse = TmdbDiscoverResultBase & {
   seasons?: TmdbTvSeasonSummary[] | null;
   aggregate_credits?: TmdbAggregateCreditsResponse | null;
   images?: TmdbImagesResponse | null;
+  watch_providers?: TmdbWatchProvidersResponse | null;
 };
 
 export type TmdbCatalogSearchResponse = {

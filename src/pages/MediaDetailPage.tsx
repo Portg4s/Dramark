@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { MediaPoster } from '@/components/ui/MediaPoster';
-import type { CatalogMedia, MediaDetails } from '@/features/catalog/types';
+import type { CatalogMedia, MediaDetails, WatchProviderOffer } from '@/features/catalog/types';
 import { useLibraryIndex, useLibraryMediaActions } from '@/features/library/hooks';
 import { useMediaDetails } from '@/features/media/hooks';
 import { TvProgressSection } from '@/features/media/TvProgressSection';
@@ -200,6 +200,72 @@ function PersonalActions({
         </button>
       ) : null}
     </div>
+  );
+}
+
+function groupWatchProviders(providers: WatchProviderOffer[]) {
+  const groups = new Map<string, WatchProviderOffer[]>();
+
+  providers.forEach((provider) => {
+    const group = groups.get(provider.label) ?? [];
+    group.push(provider);
+    groups.set(provider.label, group);
+  });
+
+  return [...groups.entries()].map(([label, items]) => ({
+    label,
+    providers: items
+  }));
+}
+
+function WatchProvidersSection({ providers }: { providers: WatchProviderOffer[] }) {
+  const groups = groupWatchProviders(providers);
+
+  if (groups.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-black text-white">Regarder sur</h2>
+      <div className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+        {groups.map(({ label, providers: groupProviders }) => (
+          <div
+            key={label}
+            className="min-w-[8.75rem] shrink-0 rounded-[1.15rem] bg-white/[0.055] px-3 py-3"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-subtle">{label}</p>
+            <div className="mt-3 flex gap-2">
+              {groupProviders.slice(0, 4).map((provider) => {
+                const logoUrl = getTmdbImageUrl(provider.logoPath, 'w92');
+
+                return (
+                  <div
+                    key={`${provider.type}-${provider.providerId}`}
+                    className="flex size-12 items-center justify-center overflow-hidden rounded-full bg-black/28 ring-1 ring-white/10"
+                    title={provider.providerName}
+                  >
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt={provider.providerName}
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="px-1 text-center text-[0.65rem] font-black leading-3 text-white">
+                        {provider.providerName}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -413,6 +479,8 @@ export function MediaDetailPage() {
             onRemove={libraryActions.removeMedia}
           />
         </div>
+
+        <WatchProvidersSection providers={media.watchProviders} />
 
         {media.mediaType === 'tv' ? (
           <TvProgressSection

@@ -16,11 +16,11 @@ Dramark ne garantit pas qu'un contenu trouve dans TMDB est disponible sur Rakute
 - Stocker la bibliotheque personnelle localement, sans compte et sans synchronisation.
 - Conserver un snapshot local leger pour afficher la liste rapidement et hors connexion.
 - Prevoir un export/import JSON versionne, sans devoir livrer l'interface complete tout de suite.
+- Afficher sur les fiches les watch providers France fournis par TMDB/JustWatch, sans verification par saison.
 
 ## Non-objectifs V1
 
 - Verification automatique de disponibilite Rakuten Viki France.
-- Watch Providers / JustWatch dans le runtime produit.
 - Watchmode, scraping Viki, feed Viki, crawler ou backend catalogue.
 - Authentification ou compte utilisateur.
 - Backend applicatif metier.
@@ -32,7 +32,7 @@ Dramark ne garantit pas qu'un contenu trouve dans TMDB est disponible sur Rakute
 
 ## Source externe
 
-TMDB est la source distante pour la recherche et les metadonnees : titres, posters, backdrops, synopsis, dates, pays, genres, casting futur, notes et IDs.
+TMDB est la source distante pour la recherche et les metadonnees : titres, posters, backdrops, synopsis, dates, pays, genres, casting, notes, IDs et watch providers France fournis via JustWatch.
 
 - Langue principale : `fr-FR`
 - Types minimum : `movie | tv`
@@ -42,8 +42,8 @@ Les donnees personnelles restent locales dans IndexedDB/Dexie. Les snapshots loc
 
 ## Attributions
 
-Une section `Credits et attributions` doit mentionner TMDB. Mention TMDB a conserver :
+Une section `Credits et attributions` doit mentionner TMDB et JustWatch. Mention TMDB a conserver :
 
 > This product uses the TMDB API but is not endorsed or certified by TMDB.
 
-Dramark ne doit pas suggerer une affiliation, certification ou approbation par Rakuten Viki ou TMDB.
+Dramark ne doit pas suggerer une affiliation, certification ou approbation par Rakuten Viki, TMDB ou JustWatch.

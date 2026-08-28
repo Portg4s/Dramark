@@ -86,4 +86,11 @@ describe('SettingsPage', () => {
     });
     expect(screen.getByText('Recherche de mise à jour terminée.')).toBeInTheDocument();
   });
+
+  it('shows the app version and JustWatch attribution', () => {
+    render(<SettingsPage />);
+
+    expect(screen.getByText('Version 0.2.0')).toBeInTheDocument();
+    expect(screen.getAllByText(/JustWatch/)).toHaveLength(2);
+  });
 });
