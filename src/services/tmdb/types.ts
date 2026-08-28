@@ -174,7 +174,7 @@ export type TmdbMovieDetailsResponse = TmdbDiscoverResultBase & {
   vote_count?: number | null;
   credits?: TmdbCreditsResponse | null;
   images?: TmdbImagesResponse | null;
-  watch_providers?: TmdbWatchProvidersResponse | null;
+  'watch/providers'?: TmdbWatchProvidersResponse | null;
 };
 
 export type TmdbTvDetailsResponse = TmdbDiscoverResultBase & {
@@ -196,7 +196,7 @@ export type TmdbTvDetailsResponse = TmdbDiscoverResultBase & {
   seasons?: TmdbTvSeasonSummary[] | null;
   aggregate_credits?: TmdbAggregateCreditsResponse | null;
   images?: TmdbImagesResponse | null;
-  watch_providers?: TmdbWatchProvidersResponse | null;
+  'watch/providers'?: TmdbWatchProvidersResponse | null;
 };
 
 export type TmdbCatalogSearchResponse = {

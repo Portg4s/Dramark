@@ -90,7 +90,7 @@ describe('SettingsPage', () => {
   it('shows the app version and JustWatch attribution', () => {
     render(<SettingsPage />);
 
-    expect(screen.getByText('Version 0.2.0')).toBeInTheDocument();
+    expect(screen.getByText('Version 0.2.1')).toBeInTheDocument();
     expect(screen.getAllByText(/JustWatch/)).toHaveLength(2);
   });
 });

@@ -25,7 +25,7 @@ describe('TMDB media detail mappers', () => {
         vote_average: 7.4,
         vote_count: 1200,
         popularity: 31.2,
-        watch_providers: {
+        'watch/providers': {
           results: {
             FR: {
               link: 'https://www.themoviedb.org/movie/42/watch',
@@ -166,7 +166,7 @@ describe('TMDB media detail mappers', () => {
         networks: [{ id: 30, name: 'Disney+' }],
         vote_average: 8.4,
         vote_count: 500,
-        watch_providers: {
+        'watch/providers': {
           results: {
             FR: {
               buy: [
