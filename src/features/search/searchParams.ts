@@ -7,7 +7,7 @@ export function createSearchParamsForQuery(query: string): URLSearchParams {
   const normalizedQuery = normalizeSearchQuery(query);
 
   if (normalizedQuery) {
-    params.set('q', normalizedQuery);
+    params.set('q', query);
   }
 
   return params;

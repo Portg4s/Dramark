@@ -32,8 +32,8 @@ function getSearchMessage(query: string, debouncedQuery: string): string | undef
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const reducedMotion = useReducedMotion();
-  const query = normalizeSearchQuery(searchParams.get('q'));
-  const debouncedQuery = useDebouncedValue(query, 350);
+  const query = searchParams.get('q') ?? '';
+  const debouncedQuery = useDebouncedValue(normalizeSearchQuery(query), 350);
   const search = useTmdbMediaSearch(debouncedQuery);
   const libraryIndex = useLibraryIndex();
   const libraryActions = useLibraryMediaActions();

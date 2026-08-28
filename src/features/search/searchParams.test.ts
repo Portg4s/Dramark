@@ -12,4 +12,8 @@ describe('search params helpers', () => {
     expect(createSearchParamsForQuery('whisper of desire').toString()).toBe('q=whisper+of+desire');
     expect(createSearchParamsForQuery('   ').toString()).toBe('');
   });
+
+  it('preserves user spacing when storing q in the URL', () => {
+    expect(createSearchParamsForQuery('moving castle ').get('q')).toBe('moving castle ');
+  });
 });
