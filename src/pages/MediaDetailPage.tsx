@@ -3,9 +3,10 @@ import { motion, useReducedMotion } from 'motion/react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { MediaPoster } from '@/components/ui/MediaPoster';
+import { MediaCard } from '@/features/catalog/MediaCard';
 import type { CatalogMedia, MediaDetails, WatchProviderOffer } from '@/features/catalog/types';
 import { useLibraryIndex, useLibraryMediaActions } from '@/features/library/hooks';
-import { useMediaDetails } from '@/features/media/hooks';
+import { useMediaDetails, useSimilarMedia } from '@/features/media/hooks';
 import { TvProgressSection } from '@/features/media/TvProgressSection';
 import { parseMediaDetailParams } from '@/features/media/route';
 import { tmdbRuntimeConfig } from '@/services/tmdb/config';
@@ -269,6 +270,53 @@ function WatchProvidersSection({ providers }: { providers: WatchProviderOffer[] 
   );
 }
 
+function SimilarMediaSection({
+  currentMedia,
+  entries,
+  isLoading,
+  libraryEntries
+}: {
+  currentMedia: CatalogMedia;
+  entries: CatalogMedia[];
+  isLoading: boolean;
+  libraryEntries: Map<string, LibraryEntryRecord>;
+}) {
+  const filteredEntries = entries.filter(
+    (media) => media.mediaType !== currentMedia.mediaType || media.tmdbId !== currentMedia.tmdbId
+  );
+
+  if (!isLoading && filteredEntries.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-black text-white">Vous pourriez aimer</h2>
+      {isLoading ? (
+        <div className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="w-32 shrink-0 space-y-2">
+              <div className="aspect-[2/3] animate-pulse rounded-[1.05rem] bg-surface/64" />
+              <div className="h-4 w-24 animate-pulse rounded-full bg-surface/64" />
+              <div className="h-3 w-16 animate-pulse rounded-full bg-surface/64" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6">
+          {filteredEntries.slice(0, 8).map((media) => (
+            <MediaCard
+              key={`${media.mediaType}:${media.tmdbId}`}
+              media={media}
+              entry={libraryEntries.get(createMediaKey(media))}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function DetailSkeleton() {
   return (
     <div className="min-h-dvh px-4 pb-10 pt-[calc(1rem+env(safe-area-inset-top))]">
@@ -289,6 +337,7 @@ export function MediaDetailPage() {
   const params = parseMediaDetailParams(useParams());
   const navigate = useNavigate();
   const details = useMediaDetails(params?.mediaType, params?.tmdbId);
+  const similarMedia = useSimilarMedia(params?.mediaType, params?.tmdbId);
   const libraryIndex = useLibraryIndex();
   const libraryActions = useLibraryMediaActions();
   const reducedMotion = useReducedMotion();
@@ -574,6 +623,13 @@ export function MediaDetailPage() {
             </div>
           </section>
         ) : null}
+
+        <SimilarMediaSection
+          currentMedia={media}
+          entries={similarMedia.data ?? []}
+          isLoading={similarMedia.isLoading}
+          libraryEntries={libraryIndex.data}
+        />
       </motion.div>
     </motion.article>
   );

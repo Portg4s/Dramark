@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -67,13 +67,55 @@ const entry: LibraryEntryRecord = {
   snapshot: { title: 'Whisper of Desire', releaseYear: 2026 }
 };
 
+const similarEntry: LibraryEntryRecord = {
+  id: 'tv:42',
+  mediaType: 'tv',
+  tmdbId: 42,
+  status: 'watched',
+  addedAt: '2026-08-26T10:00:00.000Z',
+  updatedAt: '2026-08-26T10:00:00.000Z',
+  snapshot: { title: 'Similar Drama', releaseYear: 2024 }
+};
+
 vi.mock('@/features/media/hooks', () => ({
   useMediaDetails: () => ({ data: tvDetails, isLoading: false, error: null }),
-  useTvSeasonDetails: () => ({ data: seasonDetails, isLoading: false, error: null })
+  useTvSeasonDetails: () => ({ data: seasonDetails, isLoading: false, error: null }),
+  useSimilarMedia: () => ({
+    data: [
+      {
+        mediaType: 'tv',
+        tmdbId: 42,
+        title: 'Similar Drama',
+        originalTitle: 'Similar Drama',
+        releaseDate: '2024-02-10',
+        releaseYear: 2024,
+        originalLanguage: 'ko',
+        originCountries: ['KR'],
+        voteAverage: 8.4,
+        popularity: 90
+      }
+    ],
+    isLoading: false
+  })
 }));
 
 vi.mock('@/features/library/hooks', () => ({
-  useLibraryIndex: () => ({ data: new Map([['tv:10', entry]]) }),
+  getLibraryEntryProgress: () => ({
+    isPartial: false,
+    nextEpisode: undefined,
+    ratio: 0,
+    state: 'not_started',
+    total: 0,
+    watched: 0
+  }),
+  getLibraryEntryStatusLabel: (entry: LibraryEntryRecord | undefined) =>
+    entry?.status === 'watched' ? 'Vu' : 'À regarder',
+  useLibraryIndex: () => ({
+    data: new Map([
+      ['tv:10', entry],
+      ['tv:42', similarEntry]
+    ])
+  }),
   useLibraryMediaActions: () => ({
     isMutating: false,
     removeMedia: mocks.removeMedia,
@@ -144,5 +186,17 @@ describe('MediaDetailPage', () => {
       'src',
       'https://image.tmdb.org/t/p/w92/netflix.jpg'
     );
+  });
+
+  it('shows similar titles with their local status on the detail page', () => {
+    renderMediaDetailPage();
+
+    const section = screen.getByRole('heading', { name: 'Vous pourriez aimer' }).closest('section');
+
+    expect(section).not.toBeNull();
+    expect(
+      within(section as HTMLElement).getByRole('link', { name: /Similar Drama/ })
+    ).toBeInTheDocument();
+    expect(within(section as HTMLElement).getByText('Vu')).toBeInTheDocument();
   });
 });

@@ -1,12 +1,16 @@
-import type { MediaDetails, TvSeasonDetails } from '@/features/catalog/types';
+import type { CatalogMedia, MediaDetails, TvSeasonDetails } from '@/features/catalog/types';
 import type { TmdbClient } from '@/services/tmdb/client';
 import {
   mapTmdbMovieDetailsToMediaDetails,
   mapTmdbTvDetailsToMediaDetails,
   mapTmdbTvSeasonDetails
 } from '@/services/tmdb/detailsMapper';
+import { mapTmdbMovieToCatalogMedia, mapTmdbTvToCatalogMedia } from '@/services/tmdb/mediaMapper';
 import type {
+  TmdbDiscoverResponse,
+  TmdbMovieDiscoverResult,
   TmdbMovieDetailsResponse,
+  TmdbTvDiscoverResult,
   TmdbTvDetailsResponse,
   TmdbTvSeasonDetailsResponse
 } from '@/services/tmdb/types';
@@ -44,4 +48,29 @@ export async function getTvSeasonDetails(
   );
 
   return mapTmdbTvSeasonDetails(response);
+}
+
+export async function getSimilarMedia(
+  client: TmdbClient,
+  mediaType: MediaType,
+  tmdbId: number,
+  page = 1
+): Promise<CatalogMedia[]> {
+  const response = await client.request<TmdbDiscoverResponse>(
+    `/${mediaType}/${tmdbId}/recommendations`,
+    {
+      page,
+      include_adult: false
+    }
+  );
+
+  if (mediaType === 'movie') {
+    return (response.results ?? []).map((result) =>
+      mapTmdbMovieToCatalogMedia(result as TmdbMovieDiscoverResult)
+    );
+  }
+
+  return (response.results ?? []).map((result) =>
+    mapTmdbTvToCatalogMedia(result as TmdbTvDiscoverResult)
+  );
 }
