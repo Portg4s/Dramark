@@ -9,6 +9,9 @@ type PagesFunctionContext = {
 
 const allowedTmdbPathPatterns = [
   /^\/search\/multi$/,
+  /^\/trending\/all\/week$/,
+  /^\/discover\/movie$/,
+  /^\/discover\/tv$/,
   /^\/movie\/\d+$/,
   /^\/tv\/\d+$/,
   /^\/tv\/\d+\/season\/\d+$/

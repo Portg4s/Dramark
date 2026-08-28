@@ -1,4 +1,4 @@
-import { Film, Tv } from 'lucide-react';
+import { Film, Star, Tv } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { NavLink } from 'react-router-dom';
 
@@ -50,6 +50,12 @@ export function MediaCard({ media, entry }: MediaCardProps) {
               {getMediaLabel(media.mediaType)}
             </span>
             {media.releaseYear ? <span>{media.releaseYear}</span> : null}
+            {media.voteAverage ? (
+              <span className="inline-flex items-center gap-1 text-cyan-soft">
+                <Star aria-hidden="true" className="size-3 fill-current" />
+                {media.voteAverage.toFixed(1)}
+              </span>
+            ) : null}
             {statusLabel ? <span className="text-brand-soft">{statusLabel}</span> : null}
             {showProgress ? (
               <span>

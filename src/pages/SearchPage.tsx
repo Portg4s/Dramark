@@ -1,28 +1,35 @@
 import { Search, X } from 'lucide-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import type { CatalogMedia } from '@/features/catalog/types';
+import { DiscoveryFilterStrip } from '@/features/discovery/DiscoveryFilterStrip';
+import { useDiscoveryMedia } from '@/features/discovery/hooks';
+import { DiscoverySortControl } from '@/features/discovery/DiscoverySortControl';
 import { useLibraryIndex, useLibraryMediaActions } from '@/features/library/hooks';
 import { LibraryMediaItem } from '@/features/library/LibraryMediaItem';
 import { useTmdbMediaSearch } from '@/features/search/hooks';
 import { createSearchParamsForQuery, normalizeSearchQuery } from '@/features/search/searchParams';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { tmdbRuntimeConfig } from '@/services/tmdb/config';
-import type { LibraryStatus } from '@/types/media';
+import type { DiscoveryFilterKey, DiscoverySortKey } from '@/services/tmdb/discovery';
+import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
 import { createMediaKey } from '@/utils/mediaKey';
 import { quickFade } from '@/utils/motion';
 
-function getSearchMessage(query: string, debouncedQuery: string): string | undefined {
+function getSearchMessage(debouncedQuery: string): string | undefined {
   if (!tmdbRuntimeConfig.isConfigured) {
     return 'Ajoutez un token TMDB local pour activer la recherche.';
   }
 
-  if (query.trim().length === 0) {
-    return 'Recherchez le titre que vous venez de repérer.';
+  const cleanQuery = debouncedQuery.trim();
+
+  if (cleanQuery.length === 0) {
+    return undefined;
   }
 
-  if (debouncedQuery.trim().length < 2) {
+  if (cleanQuery.length < 2) {
     return 'Tapez au moins 2 caractères.';
   }
 
@@ -32,19 +39,27 @@ function getSearchMessage(query: string, debouncedQuery: string): string | undef
 export function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const reducedMotion = useReducedMotion();
+  const [discoveryFilter, setDiscoveryFilter] = useState<DiscoveryFilterKey>('all');
+  const [discoverySort, setDiscoverySort] = useState<DiscoverySortKey>('trending');
   const query = searchParams.get('q') ?? '';
   const debouncedQuery = useDebouncedValue(normalizeSearchQuery(query), 350);
   const search = useTmdbMediaSearch(debouncedQuery);
+  const discovery = useDiscoveryMedia(discoveryFilter, discoverySort);
   const libraryIndex = useLibraryIndex();
   const libraryActions = useLibraryMediaActions();
-  const message = getSearchMessage(query, debouncedQuery);
+  const message = getSearchMessage(debouncedQuery);
+  const showTrending = tmdbRuntimeConfig.isConfigured && query.trim().length === 0;
 
   function updateQuery(nextQuery: string) {
     setSearchParams(createSearchParamsForQuery(nextQuery), { replace: true });
   }
 
-  function handleSetStatus(media: CatalogMedia, status: LibraryStatus) {
-    libraryActions.setStatusForMedia(media, status);
+  function handleSetStatus(
+    media: CatalogMedia,
+    status: LibraryStatus,
+    previousEntry?: LibraryEntryRecord
+  ) {
+    libraryActions.setStatusForMedia(media, status, previousEntry);
   }
 
   return (
@@ -63,7 +78,7 @@ export function SearchPage() {
             value={query}
             onChange={(event) => updateQuery(event.target.value)}
             aria-label="Recherche"
-            placeholder="Nom d'un drama, film ou série"
+            placeholder="Recherchez le nom d'un drama, film, série ou animé"
             className="min-w-0 flex-1 bg-transparent text-base text-white placeholder:text-subtle outline-none"
           />
           <AnimatePresence initial={false}>
@@ -100,6 +115,59 @@ export function SearchPage() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      {showTrending ? (
+        <section className="space-y-3">
+          <h2 className="text-xl font-black text-white">Tendances à découvrir</h2>
+          <DiscoveryFilterStrip
+            selectedFilter={discoveryFilter}
+            onFilterChange={setDiscoveryFilter}
+          />
+          <DiscoverySortControl selectedSort={discoverySort} onSortChange={setDiscoverySort} />
+          {discovery.isLoading ? (
+            <div role="status" className="space-y-3">
+              {[0, 1, 2].map((item) => (
+                <div
+                  key={item}
+                  className="grid grid-cols-[5.6rem_1fr] gap-3 rounded-[1.35rem] bg-surface/64 p-2.5"
+                >
+                  <div className="aspect-[2/3] animate-pulse rounded-[1.05rem] bg-surface-2/70" />
+                  <div className="space-y-3 py-3">
+                    <div className="h-3 w-24 animate-pulse rounded-full bg-surface-2/70" />
+                    <div className="h-5 w-3/4 animate-pulse rounded-full bg-surface-2/70" />
+                    <div className="h-10 w-full animate-pulse rounded-full bg-surface-2/70" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {discovery.data && discovery.data.results.length > 0 ? (
+            <LayoutGroup id="trending-search-results">
+              <motion.div layout className="space-y-3">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {discovery.data.results.slice(0, 10).map((media, index) => (
+                    <LibraryMediaItem
+                      key={`${media.mediaType}:${media.tmdbId}`}
+                      media={media}
+                      mode="search"
+                      motionIndex={index}
+                      entry={libraryIndex.data.get(createMediaKey(media))}
+                      isBusy={libraryActions.isMutating}
+                      onSetStatus={handleSetStatus}
+                      onRemove={libraryActions.removeMedia}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            </LayoutGroup>
+          ) : null}
+          {discovery.data && discovery.data.results.length === 0 ? (
+            <p className="rounded-[1.35rem] bg-surface/64 px-5 py-6 text-center text-sm font-medium leading-6 text-muted">
+              Aucun titre trouvé pour ce filtre pour l'instant.
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <AnimatePresence mode="popLayout" initial={false}>
         {search.isLoading ? (

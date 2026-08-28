@@ -1,8 +1,15 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
 import { loadEnv } from 'vite';
 import { defineConfig } from 'vitest/config';
 import { VitePWA } from 'vite-plugin-pwa';
+
+const packageJson = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf-8')
+) as {
+  version: string;
+};
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -13,7 +20,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         includeAssets: [
           'brand/favicon-16.png',
           'brand/favicon-32.png',
@@ -81,6 +88,9 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': '/src'
       }
+    },
+    define: {
+      __APP_VERSION__: JSON.stringify(packageJson.version)
     },
     test: {
       environment: 'jsdom',

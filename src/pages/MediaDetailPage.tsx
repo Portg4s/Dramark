@@ -57,6 +57,21 @@ function translateTvStatus(status: string | undefined): string | undefined {
   return status ? (statusMap[status] ?? status) : undefined;
 }
 
+function formatVoteSummary(
+  voteAverage: number | undefined,
+  voteCount: number | undefined
+): string | undefined {
+  if (!voteAverage) {
+    return undefined;
+  }
+
+  if (!voteCount || voteCount < 10) {
+    return `${voteAverage.toFixed(1)} · peu d'avis`;
+  }
+
+  return `${voteAverage.toFixed(1)} · ${voteCount.toLocaleString('fr-FR')} votes`;
+}
+
 function buildInfoLine(details: MediaDetails): string[] {
   const countryName = formatCountryName(details.originCountries[0]);
   const values = [
@@ -139,23 +154,35 @@ function PersonalActions({
   details: MediaDetails;
   entry?: LibraryEntryRecord;
   isBusy: boolean;
-  onSetStatus: (media: CatalogMedia, status: LibraryStatus) => void;
-  onRemove: (media: CatalogMedia) => void;
+  onSetStatus: (
+    media: CatalogMedia,
+    status: LibraryStatus,
+    previousEntry?: LibraryEntryRecord
+  ) => void;
+  onRemove: (media: CatalogMedia, previousEntry?: LibraryEntryRecord) => void;
 }) {
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <ActionButton
           active={entry?.status === 'watchlist'}
-          disabled={isBusy || entry?.status === 'watchlist'}
-          onClick={() => onSetStatus(details, 'watchlist')}
+          disabled={isBusy}
+          onClick={() => {
+            if (entry?.status !== 'watchlist') {
+              onSetStatus(details, 'watchlist', entry);
+            }
+          }}
         >
           <Clock3 aria-hidden="true" className="size-4" />À regarder
         </ActionButton>
         <ActionButton
           active={entry?.status === 'watched'}
-          disabled={isBusy || entry?.status === 'watched'}
-          onClick={() => onSetStatus(details, 'watched')}
+          disabled={isBusy}
+          onClick={() => {
+            if (entry?.status !== 'watched') {
+              onSetStatus(details, 'watched', entry);
+            }
+          }}
         >
           <CheckCircle2 aria-hidden="true" className="size-4" />
           Vu
@@ -165,7 +192,7 @@ function PersonalActions({
         <button
           type="button"
           disabled={isBusy}
-          onClick={() => onRemove(details)}
+          onClick={() => onRemove(details, entry)}
           className="pressable focus-ring inline-flex min-h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold text-subtle hover:bg-danger/12 hover:text-danger disabled:cursor-not-allowed disabled:opacity-55"
         >
           <Trash2 aria-hidden="true" className="size-4" />
@@ -262,6 +289,7 @@ export function MediaDetailPage() {
   const broadcastLine = buildBroadcastLine(media);
   const statusLabel = translateTvStatus(media.status);
   const languageName = formatLanguageName(media.originalLanguage);
+  const voteSummary = formatVoteSummary(media.voteAverage, media.voteCount);
 
   return (
     <motion.article
@@ -280,7 +308,7 @@ export function MediaDetailPage() {
         <ArrowLeft aria-hidden="true" className="size-5" />
       </button>
 
-      <section className="relative min-h-[25rem] overflow-hidden px-4 pb-8 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 lg:px-8">
+      <section className="relative -mb-12 min-h-[25rem] overflow-visible px-4 pb-20 pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 lg:px-8">
         {backdropUrl ? (
           <motion.img
             initial={{ opacity: 0 }}
@@ -288,13 +316,17 @@ export function MediaDetailPage() {
             transition={quickFade}
             src={backdropUrl}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover opacity-70"
+            className="absolute inset-x-0 -bottom-16 top-0 h-[calc(100%+4rem)] w-full object-cover opacity-70"
             decoding="async"
           />
         ) : null}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,9,18,0.20)_0%,rgba(7,9,18,0.72)_56%,#070912_100%)]"
+          className="absolute inset-x-0 -bottom-16 top-0 bg-[linear-gradient(180deg,rgba(7,9,18,0.20)_0%,rgba(7,9,18,0.72)_54%,rgba(11,18,32,0.94)_82%,#0B1220_100%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 -bottom-20 h-40 bg-[linear-gradient(180deg,rgba(11,18,32,0)_0%,rgba(11,18,32,0.78)_42%,#0B1220_100%)]"
         />
         <motion.div
           className="relative z-10 mt-36 grid grid-cols-[7.2rem_1fr] gap-4 sm:grid-cols-[9rem_1fr]"
@@ -315,11 +347,10 @@ export function MediaDetailPage() {
                 <Icon aria-hidden="true" className="size-3.5" />
                 {getMediaLabel(media.mediaType)}
               </span>
-              {media.voteAverage ? (
+              {voteSummary ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-brand-soft backdrop-blur">
                   <Star aria-hidden="true" className="size-3.5 fill-current" />
-                  {media.voteAverage.toFixed(1)}
-                  {media.voteCount ? ` · ${media.voteCount.toLocaleString('fr-FR')} votes` : null}
+                  {voteSummary}
                 </span>
               ) : null}
             </div>
@@ -354,7 +385,7 @@ export function MediaDetailPage() {
       </section>
 
       <motion.div
-        className="space-y-8 px-4 pt-5 sm:px-6 sm:pt-6 lg:px-8"
+        className="relative z-10 space-y-8 px-4 pt-5 sm:px-6 sm:pt-6 lg:px-8"
         initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={

@@ -13,6 +13,7 @@ import { useTvSeasonDetails } from '@/features/media/hooks';
 import {
   getDefaultSeasonNumber,
   getEffectiveWatchedEpisodes,
+  createEpisodeKey,
   getNextEpisode,
   getProgressRatio,
   getTotalEpisodeCount,
@@ -153,6 +154,26 @@ export function TvProgressSection({
     updateWatched(Array.from(nextWatched));
   }
 
+  function markNextEpisodeWatched() {
+    if (!nextEpisode) {
+      return;
+    }
+
+    const episodes = seasonDetails.data?.episodes ?? [];
+    const tmdbEpisode = getEpisodeByProgressSlot(
+      episodes,
+      nextEpisode.seasonNumber,
+      nextEpisode.episodeNumber
+    );
+    const episodeKey = tmdbEpisode
+      ? createEpisodeProgressKey(episodes, tmdbEpisode)
+      : createEpisodeKey(nextEpisode.seasonNumber, nextEpisode.episodeNumber);
+    const nextWatched = new Set(watchedEpisodes);
+    nextWatched.add(episodeKey);
+
+    updateWatched(Array.from(nextWatched));
+  }
+
   if (details.seasons.length === 0) {
     return (
       <section className="space-y-3 rounded-[1.35rem] bg-surface/64 p-4 shadow-panel">
@@ -216,8 +237,21 @@ export function TvProgressSection({
             ? `${watchedCount} / ${totalCount} épisodes`
             : `${watchedCount} / ${totalCount} épisodes vus`}
         </p>
-        {continueLabel ? (
-          <p className="text-sm font-semibold text-white/82">{continueLabel}</p>
+        {continueLabel && nextEpisode ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold text-white/82">{continueLabel}</p>
+            <motion.button
+              type="button"
+              disabled={isBusy || seasonDetails.isLoading}
+              onClick={markNextEpisodeWatched}
+              aria-label={`Marquer l'épisode ${nextEpisode.episodeNumber} vu`}
+              whileTap={reducedMotion || isBusy ? undefined : { scale: 0.975 }}
+              className="pressable focus-ring inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-brand px-4 text-sm font-black text-white shadow-[0_12px_28px_rgba(89,183,255,0.22)] disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              <CheckCircle2 aria-hidden="true" className="size-4" />
+              Marquer vu
+            </motion.button>
+          </div>
         ) : null}
       </div>
 

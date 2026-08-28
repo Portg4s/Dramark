@@ -6,9 +6,11 @@ import {
   removeLibraryEntry,
   setLibraryEntryStatus,
   setLibraryEntryTvProgress,
+  upsertLibraryEntry,
   type SetLibraryStatusInput,
   type SetTvProgressInput
 } from '@/db/libraryRepository';
+import { showToast } from '@/components/system/toastStore';
 import type { CatalogMedia } from '@/features/catalog/types';
 import {
   getNextEpisode,
@@ -132,19 +134,49 @@ export function useRemoveLibraryEntry() {
 }
 
 export function useLibraryMediaActions() {
+  const queryClient = useQueryClient();
   const setStatus = useSetLibraryStatus();
   const setTvProgress = useSetTvProgress();
   const removeEntry = useRemoveLibraryEntry();
 
+  async function restorePreviousEntry(
+    previousEntry: LibraryEntryRecord | undefined,
+    media: CatalogMedia
+  ) {
+    if (previousEntry) {
+      await upsertLibraryEntry(previousEntry);
+    } else {
+      await removeLibraryEntry(media);
+    }
+
+    await queryClient.invalidateQueries({ queryKey: libraryQueryKeys.all });
+  }
+
   return {
     isMutating: setStatus.isPending || setTvProgress.isPending || removeEntry.isPending,
-    setStatusForMedia(media: CatalogMedia, status: LibraryStatus) {
-      setStatus.mutate({
-        mediaType: media.mediaType,
-        tmdbId: media.tmdbId,
-        status,
-        snapshot: createSnapshotFromCatalogMedia(media)
-      });
+    setStatusForMedia(
+      media: CatalogMedia,
+      status: LibraryStatus,
+      previousEntry?: LibraryEntryRecord
+    ) {
+      setStatus.mutate(
+        {
+          mediaType: media.mediaType,
+          tmdbId: media.tmdbId,
+          status,
+          snapshot: createSnapshotFromCatalogMedia(media)
+        },
+        {
+          onSuccess: () => {
+            showToast({
+              title: status === 'watched' ? 'Marque comme vu' : 'Ajoute a regarder',
+              detail: media.title,
+              actionLabel: 'Annuler',
+              onAction: () => restorePreviousEntry(previousEntry, media)
+            });
+          }
+        }
+      );
     },
     setTvProgressForMedia(
       media: CatalogMedia,
@@ -159,8 +191,25 @@ export function useLibraryMediaActions() {
         snapshot: createSnapshotFromCatalogMedia(media)
       });
     },
-    removeMedia(media: CatalogMedia) {
-      removeEntry.mutate({ mediaType: media.mediaType, tmdbId: media.tmdbId });
+    removeMedia(media: CatalogMedia, previousEntry?: LibraryEntryRecord) {
+      removeEntry.mutate(
+        { mediaType: media.mediaType, tmdbId: media.tmdbId },
+        {
+          onSuccess: () => {
+            showToast({
+              title: 'Retire de ma liste',
+              detail: media.title,
+              actionLabel: previousEntry ? 'Annuler' : undefined,
+              onAction: previousEntry
+                ? async () => {
+                    await upsertLibraryEntry(previousEntry);
+                    await queryClient.invalidateQueries({ queryKey: libraryQueryKeys.all });
+                  }
+                : undefined
+            });
+          }
+        }
+      );
     }
   };
 }

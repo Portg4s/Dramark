@@ -16,7 +16,20 @@ export const libraryExportSchema = z.object({
           title: z.string().min(1),
           posterPath: z.string().optional(),
           releaseYear: z.number().int().optional(),
-          primaryCountry: z.string().optional()
+          primaryCountry: z.string().optional(),
+          voteAverage: z.number().optional()
+        })
+        .optional(),
+      tvProgress: z
+        .object({
+          watchedEpisodes: z.array(z.string()),
+          seasons: z.array(
+            z.object({
+              seasonNumber: z.number().int(),
+              episodeCount: z.number().int().nonnegative()
+            })
+          ),
+          updatedAt: z.string().datetime()
         })
         .optional()
     })

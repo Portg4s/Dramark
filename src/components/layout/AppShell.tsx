@@ -5,6 +5,8 @@ import { BottomNavigation } from '@/components/layout/BottomNavigation';
 import { BrandSplash } from '@/components/layout/BrandSplash';
 import { ConfigurationNotice } from '@/components/system/ConfigurationNotice';
 import { OfflineBanner } from '@/components/system/OfflineBanner';
+import { PwaUpdatePrompt } from '@/components/system/PwaUpdatePrompt';
+import { ToastHost } from '@/components/system/ToastHost';
 import { pageTransition } from '@/utils/motion';
 
 export function AppShell() {
@@ -24,7 +26,7 @@ export function AppShell() {
             'flex-1',
             isMediaDetail
               ? 'pb-0'
-              : 'px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10'
+              : 'px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] sm:px-6 lg:px-8 lg:pb-10'
           ].join(' ')}
         >
           {!isMediaDetail ? <ConfigurationNotice /> : null}
@@ -42,6 +44,8 @@ export function AppShell() {
         </main>
         {!isMediaDetail ? <BottomNavigation /> : null}
       </div>
+      <ToastHost />
+      <PwaUpdatePrompt />
     </div>
   );
 }

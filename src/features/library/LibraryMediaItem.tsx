@@ -26,8 +26,12 @@ type LibraryMediaItemProps = {
   mode: 'search' | 'library';
   isBusy?: boolean;
   motionIndex?: number;
-  onSetStatus: (media: CatalogMedia, status: LibraryStatus) => void;
-  onRemove: (media: CatalogMedia) => void;
+  onSetStatus: (
+    media: CatalogMedia,
+    status: LibraryStatus,
+    previousEntry?: LibraryEntryRecord
+  ) => void;
+  onRemove: (media: CatalogMedia, previousEntry?: LibraryEntryRecord) => void;
 };
 
 function getMediaLabel(mediaType: CatalogMedia['mediaType']): string {
@@ -40,11 +44,13 @@ function getPrimaryActionLabel(status: LibraryStatus): string {
 
 function StatusButton({
   active,
+  ariaLabel,
   children,
   disabled,
   onClick
 }: {
   active: boolean;
+  ariaLabel?: string;
   children: ReactNode;
   disabled: boolean;
   onClick: () => void;
@@ -56,6 +62,7 @@ function StatusButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
+      aria-label={ariaLabel}
       whileTap={reducedMotion || disabled ? undefined : { scale: 0.975 }}
       className={[
         'pressable focus-ring flex min-h-11 items-center justify-center gap-2 rounded-full px-4 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-55',
@@ -168,15 +175,18 @@ export function LibraryMediaItem({
           <div className="mt-3 grid grid-cols-2 gap-2">
             <StatusButton
               active={entry?.status === 'watchlist'}
+              ariaLabel="Ajouter aux titres a regarder"
               disabled={isBusy || entry?.status === 'watchlist'}
-              onClick={() => onSetStatus(media, 'watchlist')}
+              onClick={() => onSetStatus(media, 'watchlist', entry)}
             >
-              <Clock3 aria-hidden="true" className="size-4" />À regarder
+              <Clock3 aria-hidden="true" className="size-4" />
+              Liste
             </StatusButton>
             <StatusButton
               active={entry?.status === 'watched'}
+              ariaLabel="Marquer comme vu"
               disabled={isBusy || entry?.status === 'watched'}
-              onClick={() => onSetStatus(media, 'watched')}
+              onClick={() => onSetStatus(media, 'watched', entry)}
             >
               <CheckCircle2 aria-hidden="true" className="size-4" />
               Vu
@@ -187,7 +197,7 @@ export function LibraryMediaItem({
             <motion.button
               type="button"
               disabled={isBusy}
-              onClick={() => onSetStatus(media, otherStatus)}
+              onClick={() => onSetStatus(media, otherStatus, entry)}
               whileTap={reducedMotion || isBusy ? undefined : { scale: 0.975 }}
               className="pressable focus-ring flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(89,183,255,0.24)] disabled:cursor-not-allowed disabled:opacity-55"
             >
@@ -210,7 +220,7 @@ export function LibraryMediaItem({
                   label: 'Retirer de ma liste',
                   icon: <Trash2 aria-hidden="true" className="size-4" />,
                   destructive: true,
-                  onSelect: () => onRemove(media)
+                  onSelect: () => onRemove(media, entry)
                 }
               ]}
               trigger={({ ref, isOpen, toggle }) => (
@@ -236,7 +246,7 @@ export function LibraryMediaItem({
           <motion.button
             type="button"
             disabled={isBusy}
-            onClick={() => onRemove(media)}
+            onClick={() => onRemove(media, entry)}
             whileTap={reducedMotion || isBusy ? undefined : { scale: 0.98 }}
             className="pressable focus-ring mt-2 min-h-9 rounded-full px-3 text-xs font-semibold text-subtle hover:bg-surface-2/55 hover:text-white disabled:cursor-not-allowed disabled:opacity-55"
           >

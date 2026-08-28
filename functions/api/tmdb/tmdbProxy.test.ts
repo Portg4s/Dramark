@@ -5,6 +5,9 @@ import { buildTmdbUrl, getTmdbPath, isAllowedTmdbPath } from './[[path]]';
 describe('TMDB Pages Function routing', () => {
   it('allows only Dramark TMDB API paths', () => {
     expect(isAllowedTmdbPath('/search/multi')).toBe(true);
+    expect(isAllowedTmdbPath('/trending/all/week')).toBe(true);
+    expect(isAllowedTmdbPath('/discover/movie')).toBe(true);
+    expect(isAllowedTmdbPath('/discover/tv')).toBe(true);
     expect(isAllowedTmdbPath('/movie/42')).toBe(true);
     expect(isAllowedTmdbPath('/tv/7')).toBe(true);
     expect(isAllowedTmdbPath('/tv/7/season/1')).toBe(true);

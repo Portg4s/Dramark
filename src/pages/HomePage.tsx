@@ -1,5 +1,6 @@
-import { ArrowRight, Library, Search, Tv } from 'lucide-react';
+import { ArrowRight, Tv } from 'lucide-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import homeBackground from '@/assets/brand/dramark-home-bg.png';
@@ -7,6 +8,8 @@ import logoHorizontal from '@/assets/brand/dramark-logo-horizontal.png';
 import brandMark from '@/assets/brand/dramark-markV2.png';
 import { MediaPoster } from '@/components/ui/MediaPoster';
 import { MediaCard } from '@/features/catalog/MediaCard';
+import { useDiscoveryMedia } from '@/features/discovery/hooks';
+import { TrendingRail } from '@/features/discovery/TrendingRail';
 import {
   getLibraryEntryProgress,
   mapLibraryEntryToCatalogMedia,
@@ -15,6 +18,7 @@ import {
 } from '@/features/library/hooks';
 import { sortLibraryEntries } from '@/features/library/sorting';
 import { createMediaDetailPath } from '@/features/media/route';
+import type { DiscoveryFilterKey, DiscoverySortKey } from '@/services/tmdb/discovery';
 import type { LibraryEntryRecord } from '@/types/media';
 import { listSpring, motionEase, quickFade } from '@/utils/motion';
 
@@ -34,41 +38,6 @@ function AnimatedCount({ value }: { value: number }) {
         {value}
       </motion.span>
     </AnimatePresence>
-  );
-}
-
-function HomeAction({
-  to,
-  title,
-  description,
-  icon: Icon
-}: {
-  to: string;
-  title: string;
-  description: string;
-  icon: typeof Search;
-}) {
-  const reducedMotion = useReducedMotion();
-
-  return (
-    <motion.div whileTap={reducedMotion ? undefined : { scale: 0.985 }}>
-      <NavLink
-        to={to}
-        className="pressable focus-ring group flex min-h-16 items-center gap-3 rounded-[1.25rem] bg-surface/64 px-4 py-3 shadow-[0_16px_38px_rgba(0,0,0,0.22)] hover:bg-surface-2/54"
-      >
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-2/58 text-brand-soft">
-          <Icon aria-hidden="true" className="size-5" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-white">{title}</span>
-          <span className="mt-0.5 block text-xs leading-5 text-subtle">{description}</span>
-        </span>
-        <ArrowRight
-          aria-hidden="true"
-          className="size-4 shrink-0 text-subtle transition group-hover:translate-x-0.5 group-hover:text-white"
-        />
-      </NavLink>
-    </motion.div>
   );
 }
 
@@ -205,11 +174,17 @@ function HomeRail({
 
 export function HomePage() {
   const reducedMotion = useReducedMotion();
+  const [discoveryFilter, setDiscoveryFilter] = useState<DiscoveryFilterKey>('all');
+  const [discoverySort, setDiscoverySort] = useState<DiscoverySortKey>('trending');
   const counts = useLibraryCounts();
   const watchlist = useLibraryEntries('watchlist');
   const watched = useLibraryEntries('watched');
+  const discovery = useDiscoveryMedia(discoveryFilter, discoverySort);
   const watchlistEntries = sortLibraryEntries(watchlist.data ?? [], 'recent');
   const watchedEntries = sortLibraryEntries(watched.data ?? [], 'recent');
+  const libraryEntries = new Map(
+    [...watchlistEntries, ...watchedEntries].map((entry) => [entry.id, entry])
+  );
   const continueEntries = watchlistEntries.filter(
     (entry) => getLibraryEntryProgress(entry).isPartial
   );
@@ -299,20 +274,16 @@ export function HomePage() {
         </section>
       )}
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <HomeAction
-          to="/recherche"
-          title="Recherche"
-          description="Ajouter un film ou une série."
-          icon={Search}
-        />
-        <HomeAction
-          to="/liste"
-          title="Ma liste"
-          description="Parcourir votre collection."
-          icon={Library}
-        />
-      </div>
+      <TrendingRail
+        title="Tendances à découvrir"
+        entries={discovery.data?.results ?? []}
+        libraryEntries={libraryEntries}
+        selectedFilter={discoveryFilter}
+        onFilterChange={setDiscoveryFilter}
+        selectedSort={discoverySort}
+        onSortChange={setDiscoverySort}
+        isLoading={discovery.isLoading}
+      />
     </div>
   );
 }
