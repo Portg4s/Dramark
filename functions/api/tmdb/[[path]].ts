@@ -13,7 +13,9 @@ const allowedTmdbPathPatterns = [
   /^\/discover\/movie$/,
   /^\/discover\/tv$/,
   /^\/movie\/\d+$/,
+  /^\/movie\/\d+\/recommendations$/,
   /^\/tv\/\d+$/,
+  /^\/tv\/\d+\/recommendations$/,
   /^\/tv\/\d+\/season\/\d+$/
 ] as const;
 

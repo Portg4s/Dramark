@@ -9,12 +9,15 @@ describe('TMDB Pages Function routing', () => {
     expect(isAllowedTmdbPath('/discover/movie')).toBe(true);
     expect(isAllowedTmdbPath('/discover/tv')).toBe(true);
     expect(isAllowedTmdbPath('/movie/42')).toBe(true);
+    expect(isAllowedTmdbPath('/movie/42/recommendations')).toBe(true);
     expect(isAllowedTmdbPath('/tv/7')).toBe(true);
+    expect(isAllowedTmdbPath('/tv/7/recommendations')).toBe(true);
     expect(isAllowedTmdbPath('/tv/7/season/1')).toBe(true);
 
     expect(isAllowedTmdbPath('/person/1')).toBe(false);
     expect(isAllowedTmdbPath('/tv/popular')).toBe(false);
     expect(isAllowedTmdbPath('/movie/abc')).toBe(false);
+    expect(isAllowedTmdbPath('/tv/7/recommendations/latest')).toBe(false);
     expect(isAllowedTmdbPath('/tv/7/season/latest')).toBe(false);
   });
 
