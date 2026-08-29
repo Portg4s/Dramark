@@ -1,8 +1,10 @@
-import { CalendarDays, Tv } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Clock3, Tv } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 import { MediaPoster } from '@/components/ui/MediaPoster';
 import { type CalendarTimelineItem, useCalendarTimeline } from '@/features/calendar/hooks';
+import { useLibraryMediaActions } from '@/features/library/hooks';
+import { createEpisodeKey } from '@/features/media/tvProgress';
 import { createMediaDetailPath } from '@/features/media/route';
 
 const dayFormatter = new Intl.DateTimeFormat('fr-FR', {
@@ -62,40 +64,99 @@ function groupTimelineItems(items: CalendarTimelineItem[]) {
   }, []);
 }
 
-function CalendarItemCard({ item }: { item: CalendarTimelineItem }) {
+function isEpisodeAvailable(airDate: string, now = new Date()) {
+  return airDate <= formatIsoDate(now);
+}
+
+function CalendarItemCard({
+  item,
+  isBusy,
+  onMarkWatched
+}: {
+  item: CalendarTimelineItem;
+  isBusy: boolean;
+  onMarkWatched: (item: CalendarTimelineItem) => void;
+}) {
+  const episodeKey = createEpisodeKey(item.seasonNumber, item.episodeNumber);
+  const canMarkWatched = isEpisodeAvailable(item.airDate);
+  const isAlreadyWatched = item.watchedEpisodes.includes(episodeKey);
+
   return (
-    <NavLink
-      to={createMediaDetailPath(item.mediaType, item.tmdbId)}
-      className="focus-ring grid grid-cols-[5rem_1fr] gap-4 rounded-[1.3rem] bg-surface/72 p-2.5 shadow-panel"
-    >
-      <MediaPoster
-        title={item.title}
-        posterPath={item.posterPath}
-        size="w185"
-        className="rounded-[1rem]"
-      />
-      <div className="flex min-w-0 flex-col justify-center py-1 pr-2">
-        <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-normal text-brand-soft">
-          <Tv aria-hidden="true" className="size-3.5" />
-          {item.episodeCode}
+    <article className="grid grid-cols-[5rem_1fr] gap-4 rounded-[1.3rem] bg-surface/72 p-2.5 shadow-panel">
+      <NavLink
+        to={createMediaDetailPath(item.mediaType, item.tmdbId)}
+        className="focus-ring rounded-[1rem]"
+        aria-label={`Ouvrir ${item.title}`}
+      >
+        <MediaPoster
+          title={item.title}
+          posterPath={item.posterPath}
+          size="w185"
+          className="rounded-[1rem]"
+        />
+      </NavLink>
+      <div className="flex min-w-0 flex-col justify-center py-1 pr-1">
+        <NavLink
+          to={createMediaDetailPath(item.mediaType, item.tmdbId)}
+          className="focus-ring min-w-0 rounded-lg"
+        >
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-normal text-brand-soft">
+            <Tv aria-hidden="true" className="size-3.5" />
+            {item.episodeCode}
+          </div>
+          <h3 className="line-clamp-2 text-base font-black leading-5 text-white">{item.title}</h3>
+          {item.episodeName ? (
+            <p className="mt-1 line-clamp-2 text-sm font-medium leading-5 text-muted">
+              {item.episodeName}
+            </p>
+          ) : null}
+        </NavLink>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          {item.providerLabel ? (
+            <p className="min-w-0 truncate text-xs font-semibold text-subtle">
+              {item.providerLabel}
+            </p>
+          ) : (
+            <span />
+          )}
+          {isAlreadyWatched ? (
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/8 px-3 py-2 text-xs font-bold text-brand-soft">
+              <CheckCircle2 aria-hidden="true" className="size-3.5" />
+              Vu
+            </span>
+          ) : canMarkWatched ? (
+            <button
+              type="button"
+              aria-label={`Marquer ${item.title} ${item.episodeCode} vu`}
+              disabled={isBusy}
+              onClick={() => onMarkWatched(item)}
+              className="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-full bg-brand px-3 py-2 text-xs font-black text-[var(--color-night)] shadow-brand disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <CheckCircle2 aria-hidden="true" className="size-3.5" />
+              Marquer vu
+            </button>
+          ) : (
+            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/8 px-3 py-2 text-xs font-bold text-subtle">
+              <Clock3 aria-hidden="true" className="size-3.5" />A venir
+            </span>
+          )}
         </div>
-        <h3 className="line-clamp-2 text-base font-black leading-5 text-white">{item.title}</h3>
-        {item.episodeName ? (
-          <p className="mt-1 line-clamp-2 text-sm font-medium leading-5 text-muted">
-            {item.episodeName}
-          </p>
-        ) : null}
-        {item.providerLabel ? (
-          <p className="mt-2 text-xs font-semibold text-subtle">{item.providerLabel}</p>
-        ) : null}
       </div>
-    </NavLink>
+    </article>
   );
 }
 
 export function CalendarPage() {
   const timeline = useCalendarTimeline();
+  const libraryActions = useLibraryMediaActions();
   const groups = groupTimelineItems(timeline.items);
+
+  function markTimelineItemWatched(item: CalendarTimelineItem) {
+    const episodeKey = createEpisodeKey(item.seasonNumber, item.episodeNumber);
+    const watchedEpisodes = Array.from(new Set([...item.watchedEpisodes, episodeKey]));
+
+    libraryActions.setTvProgressForMedia(item.media, item.seasons, watchedEpisodes);
+  }
 
   return (
     <div className="space-y-6">
@@ -131,7 +192,12 @@ export function CalendarPage() {
           <h2 className="text-2xl font-black text-white">{group.label}</h2>
           <div className="space-y-3">
             {group.items.map((item) => (
-              <CalendarItemCard key={item.id} item={item} />
+              <CalendarItemCard
+                key={item.id}
+                item={item}
+                isBusy={libraryActions.isMutating}
+                onMarkWatched={markTimelineItemWatched}
+              />
             ))}
           </div>
         </section>
