@@ -20,6 +20,18 @@ export function ToastHost({ subscribe = subscribeToasts }: ToastHostProps) {
 
   useEffect(() => subscribe(setToasts), [subscribe]);
 
+  useEffect(() => {
+    const timers = toasts.map((toast) =>
+      window.setTimeout(() => {
+        dismissToast(toast.id);
+      }, 2000)
+    );
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [toasts]);
+
   return (
     <div className="pointer-events-none fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-50 mx-auto flex max-w-md flex-col gap-2">
       <AnimatePresence initial={false}>

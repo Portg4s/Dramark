@@ -1,7 +1,17 @@
-import { ChevronDown, Film, Search, Tv } from 'lucide-react';
+import {
+  BadgeCheck,
+  ChevronDown,
+  Clapperboard,
+  Film,
+  ListChecks,
+  Search,
+  Trophy,
+  Tv
+} from 'lucide-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
+import { showToast } from '@/components/system/toastStore';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import {
   getLibraryEntryProgress,
@@ -12,6 +22,11 @@ import {
 import { LibraryMediaItem } from '@/features/library/LibraryMediaItem';
 import { filterLibraryEntries, type LibraryMediaTypeFilter } from '@/features/library/filtering';
 import { sortLibraryEntries, type LibrarySort } from '@/features/library/sorting';
+import {
+  getLibraryStats,
+  type LibraryAchievement,
+  type LibraryStats
+} from '@/features/library/stats';
 import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
 import { listSpring, motionEase, quickFade, softSpring } from '@/utils/motion';
 
@@ -42,6 +57,8 @@ const mediaTypeFilters: Array<{
   { value: 'tv', label: 'Series', icon: Tv }
 ];
 
+const achievementStorageKey = 'dramark:library-achievements:v1';
+
 function getEmptyMessage(status: LibraryStatus): string {
   return status === 'watchlist'
     ? 'Ajoutez votre prochain drama depuis la recherche.'
@@ -54,6 +71,67 @@ function getViewEmptyMessage(view: LibraryView): string {
   }
 
   return getEmptyMessage(view);
+}
+
+function readStoredAchievementKeys(): Set<string> {
+  if (typeof window === 'undefined') {
+    return new Set();
+  }
+
+  try {
+    const storedValue = window.localStorage.getItem(achievementStorageKey);
+    const parsedValue: unknown = storedValue ? JSON.parse(storedValue) : [];
+
+    return new Set(
+      Array.isArray(parsedValue)
+        ? parsedValue.filter((value): value is string => typeof value === 'string')
+        : []
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+function storeAchievementKeys(keys: Set<string>) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(achievementStorageKey, JSON.stringify([...keys]));
+}
+
+function useAchievementNotifications(achievements: LibraryAchievement[]) {
+  useEffect(() => {
+    if (achievements.length === 0) {
+      return;
+    }
+
+    const storedKeys = readStoredAchievementKeys();
+    const newAchievements = achievements.filter((achievement) => !storedKeys.has(achievement.key));
+
+    if (newAchievements.length === 0) {
+      return;
+    }
+
+    newAchievements.forEach((achievement) => storedKeys.add(achievement.key));
+    storeAchievementKeys(storedKeys);
+
+    const achievement = newAchievements.at(-1);
+
+    if (!achievement) {
+      return;
+    }
+
+    showToast({
+      title: 'Succès débloqué',
+      detail:
+        newAchievements.length > 1
+          ? `${achievement.label} + ${newAchievements.length - 1} autre${
+              newAchievements.length > 2 ? 's' : ''
+            }`
+          : achievement.label
+    });
+  }, [achievements]);
 }
 
 function AnimatedCount({ value, className = '' }: { value: number; className?: string }) {
@@ -75,6 +153,104 @@ function AnimatedCount({ value, className = '' }: { value: number; className?: s
   );
 }
 
+function StatMetric({
+  label,
+  value,
+  icon: Icon
+}: {
+  label: string;
+  value: number;
+  icon: typeof Film;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-[1rem] bg-white/[0.055] px-2.5 py-2">
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand-soft">
+        <Icon aria-hidden="true" className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-lg font-black leading-none tabular-nums text-white">
+          {value.toLocaleString('fr-FR')}
+        </p>
+        <p className="mt-1 truncate text-[0.68rem] font-semibold leading-3 text-subtle">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function AchievementBadge({ achievement }: { achievement: LibraryAchievement }) {
+  return (
+    <div className="inline-flex min-h-9 min-w-0 items-center gap-2 rounded-full bg-brand/12 px-2.5 py-1.5 ring-1 ring-brand/20">
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[0_8px_18px_rgba(89,183,255,0.18)]">
+        <BadgeCheck aria-hidden="true" className="size-3.5" />
+      </span>
+      <span className="truncate text-xs font-black text-white">{achievement.label}</span>
+    </div>
+  );
+}
+
+function LibraryStatsSection({ stats }: { stats: LibraryStats }) {
+  const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  if (stats.totalTitles === 0) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-xl font-black text-white">Statistiques</h2>
+        <p className="text-xs font-semibold text-subtle">
+          {stats.totalTitles.toLocaleString('fr-FR')} titre{stats.totalTitles > 1 ? 's' : ''}
+        </p>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <StatMetric label="Titres vus" value={stats.watchedTitles} icon={Trophy} />
+        <StatMetric label="Épisodes vus" value={stats.watchedEpisodes} icon={Clapperboard} />
+        <StatMetric label="En cours" value={stats.inProgressSeries} icon={ListChecks} />
+      </div>
+      {stats.achievements.length > 0 ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setIsAchievementsOpen((isOpen) => !isOpen)}
+            className="pressable focus-ring inline-flex min-h-9 items-center gap-2 rounded-full bg-brand/12 px-3 text-xs font-black text-white ring-1 ring-brand/18"
+            aria-expanded={isAchievementsOpen}
+          >
+            <BadgeCheck aria-hidden="true" className="size-4 text-brand-soft" />
+            <span>Succès {stats.achievements.length}</span>
+            <ChevronDown
+              aria-hidden="true"
+              className={[
+                'size-4 text-subtle transition',
+                isAchievementsOpen ? 'rotate-180' : ''
+              ].join(' ')}
+            />
+          </button>
+          <AnimatePresence initial={false}>
+            {isAchievementsOpen ? (
+              <motion.div
+                key="library-achievements"
+                initial={reducedMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
+                animate={reducedMotion ? { opacity: 1 } : { opacity: 1, height: 'auto' }}
+                exit={reducedMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
+                transition={quickFade}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-2 gap-2 rounded-[1rem] bg-white/[0.045] p-2">
+                  {stats.achievements.map((achievement) => (
+                    <AchievementBadge key={achievement.key} achievement={achievement} />
+                  ))}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </>
+      ) : null}
+    </section>
+  );
+}
+
 export function LibraryPage() {
   const [activeView, setActiveView] = useState<LibraryView>('watchlist');
   const [sort, setSort] = useState<LibrarySort>('recent');
@@ -87,6 +263,12 @@ export function LibraryPage() {
 
   const watchlistEntries = watchlistQuery.data ?? emptyLibraryEntries;
   const watchedEntries = watchedQuery.data ?? emptyLibraryEntries;
+  const allEntries = useMemo(
+    () => [...watchlistEntries, ...watchedEntries],
+    [watchlistEntries, watchedEntries]
+  );
+  const stats = useMemo(() => getLibraryStats(allEntries), [allEntries]);
+  useAchievementNotifications(stats.achievements);
   const inProgressEntries = useMemo(
     () => watchlistEntries.filter((entry) => getLibraryEntryProgress(entry).isPartial),
     [watchlistEntries]
@@ -135,8 +317,10 @@ export function LibraryPage() {
         </p>
       </header>
 
+      <LibraryStatsSection stats={stats} />
+
       <LayoutGroup id="library-tabs">
-        <div className="relative grid grid-cols-3 rounded-full bg-surface/72 p-1">
+        <div className="relative grid grid-cols-3 overflow-hidden rounded-full bg-surface/72 p-1">
           {tabs.map(({ view, label }) => {
             const count = counts[view];
             const isActive = activeView === view;
@@ -147,7 +331,7 @@ export function LibraryPage() {
                 type="button"
                 onClick={() => setActiveView(view)}
                 className={[
-                  'focus-ring relative z-10 flex min-h-12 items-center justify-center gap-1.5 rounded-full px-2 text-sm font-bold transition-colors duration-200',
+                  'focus-ring relative z-10 flex min-h-11 items-center justify-center gap-1 rounded-full px-1.5 text-[0.83rem] font-bold transition-colors duration-200',
                   isActive ? 'text-white' : 'text-muted hover:text-white'
                 ].join(' ')}
                 aria-pressed={isActive}
@@ -161,7 +345,7 @@ export function LibraryPage() {
                     transition={reducedMotion ? { duration: 0.01 } : softSpring}
                   />
                 ) : null}
-                <span className="relative z-10">{label}</span>
+                <span className="relative z-10 whitespace-nowrap">{label}</span>
                 <AnimatedCount
                   value={count}
                   className={isActive ? 'relative z-10 text-white/82' : 'relative z-10 text-subtle'}
