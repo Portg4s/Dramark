@@ -1,10 +1,8 @@
 import {
   BadgeCheck,
-  CheckCircle2,
   ChevronDown,
   Clapperboard,
   Film,
-  History,
   ListChecks,
   Search,
   Trophy,
@@ -12,14 +10,12 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 import { showToast } from '@/components/system/toastStore';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import {
   getLibraryEntryProgress,
   mapLibraryEntryToCatalogMedia,
-  useLibraryActivity,
   useLibraryEntries,
   useLibraryMediaActions
 } from '@/features/library/hooks';
@@ -31,8 +27,7 @@ import {
   type LibraryAchievement,
   type LibraryStats
 } from '@/features/library/stats';
-import { createMediaDetailPath } from '@/features/media/route';
-import type { LibraryActivityRecord, LibraryEntryRecord, LibraryStatus } from '@/types/media';
+import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
 import { listSpring, motionEase, quickFade, softSpring } from '@/utils/motion';
 
 type LibraryView = LibraryStatus | 'in_progress';
@@ -193,80 +188,6 @@ function AchievementBadge({ achievement }: { achievement: LibraryAchievement }) 
   );
 }
 
-function getActivityActionLabel(activity: LibraryActivityRecord): string {
-  if (activity.action === 'episode_watched') {
-    return 'Épisode vu';
-  }
-
-  if (activity.action === 'media_watched') {
-    return activity.mediaType === 'movie' ? 'Film vu' : 'Série vue';
-  }
-
-  return 'Ajouté à regarder';
-}
-
-function getActivityDetail(activity: LibraryActivityRecord): string {
-  if (
-    activity.action === 'episode_watched' &&
-    activity.seasonNumber !== undefined &&
-    activity.episodeNumber !== undefined
-  ) {
-    return `Saison ${activity.seasonNumber} · Épisode ${activity.episodeNumber}`;
-  }
-
-  return activity.mediaType === 'movie' ? 'Film' : 'Série';
-}
-
-function LibraryActivitySection({
-  activities,
-  isLoading
-}: {
-  activities: LibraryActivityRecord[];
-  isLoading: boolean;
-}) {
-  if (isLoading || activities.length === 0) {
-    return null;
-  }
-
-  return (
-    <section className="space-y-2.5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-black text-white">Activité récente</h2>
-        <p className="text-xs font-semibold text-subtle">Local</p>
-      </div>
-      <div className="space-y-1.5 rounded-[1.15rem] bg-white/[0.045] p-2">
-        {activities.map((activity) => (
-          <Link
-            key={activity.id}
-            to={createMediaDetailPath(activity.mediaType, activity.tmdbId)}
-            className="focus-ring pressable flex min-h-14 items-center gap-3 rounded-[0.95rem] px-2.5 py-2 transition hover:bg-white/[0.055]"
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/13 text-brand-soft">
-              {activity.action === 'episode_watched' ? (
-                <CheckCircle2 aria-hidden="true" className="size-4" />
-              ) : (
-                <History aria-hidden="true" className="size-4" />
-              )}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-black text-white">
-                {activity.snapshot?.title ?? 'Titre inconnu'}
-              </span>
-              <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs font-semibold text-muted">
-                <span className="shrink-0 text-brand-soft">{getActivityActionLabel(activity)}</span>
-                <span aria-hidden="true" className="text-subtle">
-                  ·
-                </span>
-                <span className="truncate">{getActivityDetail(activity)}</span>
-              </span>
-            </span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function LibraryStatsSection({ stats }: { stats: LibraryStats }) {
   const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -338,7 +259,6 @@ export function LibraryPage() {
   const reducedMotion = useReducedMotion();
   const watchlistQuery = useLibraryEntries('watchlist');
   const watchedQuery = useLibraryEntries('watched');
-  const activityQuery = useLibraryActivity(5);
   const libraryActions = useLibraryMediaActions();
 
   const watchlistEntries = watchlistQuery.data ?? emptyLibraryEntries;
@@ -398,11 +318,6 @@ export function LibraryPage() {
       </header>
 
       <LibraryStatsSection stats={stats} />
-
-      <LibraryActivitySection
-        activities={activityQuery.data ?? []}
-        isLoading={activityQuery.isLoading}
-      />
 
       <LayoutGroup id="library-tabs">
         <div className="relative grid grid-cols-3 overflow-hidden rounded-full bg-surface/72 p-1">
