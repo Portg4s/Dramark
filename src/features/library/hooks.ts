@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  listLibraryActivity,
   listLibraryEntries,
   listLibraryEntriesByStatus,
   removeLibraryEntry,
@@ -30,6 +31,7 @@ import type {
 
 export const libraryQueryKeys = {
   all: ['library'] as const,
+  activity: (limit: number) => [...libraryQueryKeys.all, 'activity', limit] as const,
   entries: () => [...libraryQueryKeys.all, 'entries'] as const,
   byStatus: (status: LibraryStatus) => [...libraryQueryKeys.entries(), status] as const
 };
@@ -76,6 +78,14 @@ export function useLibraryEntries(status?: LibraryStatus) {
   return useQuery({
     queryKey: status ? libraryQueryKeys.byStatus(status) : libraryQueryKeys.entries(),
     queryFn: () => (status ? listLibraryEntriesByStatus(status) : listLibraryEntries()),
+    staleTime: 1000 * 20
+  });
+}
+
+export function useLibraryActivity(limit = 5) {
+  return useQuery({
+    queryKey: libraryQueryKeys.activity(limit),
+    queryFn: () => listLibraryActivity(limit),
     staleTime: 1000 * 20
   });
 }

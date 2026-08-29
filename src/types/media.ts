@@ -38,3 +38,15 @@ export type LibraryEntry = MediaIdentity & {
 export type LibraryEntryRecord = LibraryEntry & {
   id: string;
 };
+
+export type LibraryActivityAction = 'media_watchlist_added' | 'media_watched' | 'episode_watched';
+
+export type LibraryActivityRecord = MediaIdentity & {
+  id: string;
+  action: LibraryActivityAction;
+  createdAt: string;
+  snapshot?: LocalMediaSnapshot;
+  episodeKey?: string;
+  seasonNumber?: number;
+  episodeNumber?: number;
+};

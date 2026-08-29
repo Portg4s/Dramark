@@ -11,6 +11,10 @@ const discoveryMock = vi.hoisted(() => ({
   selectedSorts: [] as string[]
 }));
 
+const libraryActionsMock = vi.hoisted(() => ({
+  setTvProgressForMedia: vi.fn()
+}));
+
 const libraryEntries: Record<LibraryStatus, LibraryEntryRecord[]> = {
   watchlist: [
     {
@@ -73,6 +77,10 @@ vi.mock('@/features/library/hooks', async () => {
       data: status
         ? libraryEntries[status]
         : [...libraryEntries.watchlist, ...libraryEntries.watched]
+    }),
+    useLibraryMediaActions: () => ({
+      isMutating: false,
+      setTvProgressForMedia: libraryActionsMock.setTvProgressForMedia
     })
   };
 });
@@ -81,6 +89,7 @@ describe('HomePage', () => {
   beforeEach(() => {
     discoveryMock.selectedFilters = [];
     discoveryMock.selectedSorts = [];
+    libraryActionsMock.setTvProgressForMedia.mockReset();
     libraryEntries.watchlist = [
       {
         id: 'tv:1',
@@ -193,6 +202,73 @@ describe('HomePage', () => {
     );
 
     expect(screen.getByLabelText('1 vus, 1 en cours, 1 à regarder')).toBeInTheDocument();
+  });
+
+  it('highlights the next title to resume and marks its next episode watched', async () => {
+    const user = userEvent.setup();
+
+    libraryEntries.watchlist = [
+      {
+        id: 'tv:3',
+        mediaType: 'tv',
+        tmdbId: 3,
+        status: 'watchlist',
+        addedAt: '2026-08-24T12:00:00.000Z',
+        updatedAt: '2026-08-26T12:00:00.000Z',
+        snapshot: { title: 'Long Anime', releaseYear: 2026 },
+        tvProgress: {
+          watchedEpisodes: ['1:1'],
+          seasons: [{ seasonNumber: 1, episodeCount: 12 }],
+          updatedAt: '2026-08-26T12:00:00.000Z'
+        }
+      },
+      {
+        id: 'tv:4',
+        mediaType: 'tv',
+        tmdbId: 4,
+        status: 'watchlist',
+        addedAt: '2026-08-24T11:00:00.000Z',
+        updatedAt: '2026-08-25T12:00:00.000Z',
+        snapshot: { title: 'Side Drama', releaseYear: 2025 },
+        tvProgress: {
+          watchedEpisodes: ['1:1', '1:2'],
+          seasons: [{ seasonNumber: 1, episodeCount: 8 }],
+          updatedAt: '2026-08-25T12:00:00.000Z'
+        }
+      },
+      {
+        id: 'movie:5',
+        mediaType: 'movie',
+        tmdbId: 5,
+        status: 'watchlist',
+        addedAt: '2026-08-24T10:00:00.000Z',
+        updatedAt: '2026-08-24T10:00:00.000Z',
+        snapshot: { title: 'Fresh Movie', releaseYear: 2026 }
+      }
+    ];
+
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('heading', { name: /reprendre/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Long Anime' })).toBeInTheDocument();
+    expect(screen.getByText('Saison 1 · Épisode 2')).toBeInTheDocument();
+    expect(screen.getByText('1 / 12 épisodes vus')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Autres en cours' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Side Drama' })).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('button', { name: 'Marquer le prochain épisode de Long Anime vu' })
+    );
+
+    expect(libraryActionsMock.setTvProgressForMedia).toHaveBeenCalledWith(
+      expect.objectContaining({ tmdbId: 3, title: 'Long Anime' }),
+      [{ seasonNumber: 1, episodeCount: 12 }],
+      ['1:1', '1:2']
+    );
   });
 
   it('lets the discovery rail switch sort modes', async () => {

@@ -59,6 +59,25 @@ function formatEpisodeMeta(episode: TvEpisode): string | undefined {
   return episode.runtimeMinutes ? `~${episode.runtimeMinutes} min` : undefined;
 }
 
+function formatRemainingRuntime(minutes: number): string | undefined {
+  if (minutes <= 0) {
+    return undefined;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  if (hours === 0) {
+    return `Environ ${remainingMinutes} min restantes`;
+  }
+
+  if (remainingMinutes === 0) {
+    return `Environ ${hours} h restantes`;
+  }
+
+  return `Environ ${hours} h ${remainingMinutes} restantes`;
+}
+
 function formatContinueEpisode(
   nextEpisode: ReturnType<typeof getNextEpisode>,
   activeSeasonEpisodes: TvEpisode[]
@@ -198,6 +217,9 @@ export function TvProgressSection({
     activeSeasonKeys.length > 0 && activeSeasonKeys.every((key) => watchedSet.has(key));
   const percent = Math.round(ratio * 100);
   const continueLabel = formatContinueEpisode(nextEpisode, activeSeasonEpisodes);
+  const remainingRuntimeLabel = details.episodeRuntimeMinutes
+    ? formatRemainingRuntime((totalCount - watchedCount) * details.episodeRuntimeMinutes)
+    : undefined;
 
   return (
     <section className="space-y-4 rounded-[1.35rem] bg-surface/64 p-4 shadow-panel">
@@ -236,6 +258,11 @@ export function TvProgressSection({
           {viewingState === 'watched'
             ? `${watchedCount} / ${totalCount} épisodes`
             : `${watchedCount} / ${totalCount} épisodes vus`}
+          {viewingState !== 'watched' && remainingRuntimeLabel ? (
+            <span className="block pt-1 text-xs font-semibold text-subtle">
+              {remainingRuntimeLabel}
+            </span>
+          ) : null}
         </p>
         {continueLabel && nextEpisode ? (
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

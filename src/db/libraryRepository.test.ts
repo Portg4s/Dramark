@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { createLibraryRepository, type LibraryTable } from '@/db/libraryRepository';
+import {
+  createLibraryRepository,
+  type LibraryActivityTable,
+  type LibraryTable
+} from '@/db/libraryRepository';
 import { createEpisodeKey, createFullRegularWatchedEpisodes } from '@/features/media/tvProgress';
-import type { LibraryEntryRecord } from '@/types/media';
+import type { LibraryActivityRecord, LibraryEntryRecord } from '@/types/media';
 
 function createMemoryTable(initialEntries: LibraryEntryRecord[] = []): LibraryTable & {
   records: Map<string, LibraryEntryRecord>;
@@ -20,6 +24,25 @@ function createMemoryTable(initialEntries: LibraryEntryRecord[] = []): LibraryTa
     },
     async delete(key) {
       records.delete(key);
+    },
+    async toArray() {
+      return Array.from(records.values());
+    }
+  };
+}
+
+function createMemoryActivityTable(
+  initialEntries: LibraryActivityRecord[] = []
+): LibraryActivityTable & {
+  records: Map<string, LibraryActivityRecord>;
+} {
+  const records = new Map(initialEntries.map((entry) => [entry.id, entry]));
+
+  return {
+    records,
+    async add(record) {
+      records.set(record.id, record);
+      return record.id;
     },
     async toArray() {
       return Array.from(records.values());
@@ -224,5 +247,68 @@ describe('libraryRepository', () => {
       createEpisodeKey(1, 3)
     ]);
     expect(entry.status).toBe('watched');
+  });
+
+  it('records watched titles in local activity', async () => {
+    const activityTable = createMemoryActivityTable();
+    const repository = createLibraryRepository(createMemoryTable(), activityTable);
+
+    await repository.setStatus({
+      mediaType: 'movie',
+      tmdbId: 31,
+      status: 'watched',
+      now: '2026-08-28T18:00:00.000Z',
+      snapshot: { title: 'Quiet Movie', releaseYear: 2026 }
+    });
+
+    await expect(repository.listActivity(5)).resolves.toMatchObject([
+      {
+        action: 'media_watched',
+        mediaType: 'movie',
+        tmdbId: 31,
+        createdAt: '2026-08-28T18:00:00.000Z',
+        snapshot: { title: 'Quiet Movie', releaseYear: 2026 }
+      }
+    ]);
+  });
+
+  it('records only newly watched tv episodes in local activity', async () => {
+    const activityTable = createMemoryActivityTable();
+    const repository = createLibraryRepository(createMemoryTable(), activityTable);
+
+    await repository.setTvProgress({
+      mediaType: 'tv',
+      tmdbId: 32,
+      seasons: [{ seasonNumber: 1, episodeCount: 3 }],
+      watchedEpisodes: ['1:1'],
+      now: '2026-08-28T18:00:00.000Z',
+      snapshot: { title: 'Slow Drama' }
+    });
+    await repository.setTvProgress({
+      mediaType: 'tv',
+      tmdbId: 32,
+      seasons: [{ seasonNumber: 1, episodeCount: 3 }],
+      watchedEpisodes: ['1:1', '1:2'],
+      now: '2026-08-28T19:00:00.000Z',
+      snapshot: { title: 'Slow Drama' }
+    });
+
+    await expect(repository.listActivity(5)).resolves.toMatchObject([
+      {
+        action: 'episode_watched',
+        mediaType: 'tv',
+        tmdbId: 32,
+        episodeKey: '1:2',
+        seasonNumber: 1,
+        episodeNumber: 2,
+        createdAt: '2026-08-28T19:00:00.000Z',
+        snapshot: { title: 'Slow Drama' }
+      },
+      {
+        action: 'episode_watched',
+        episodeKey: '1:1',
+        createdAt: '2026-08-28T18:00:00.000Z'
+      }
+    ]);
   });
 });

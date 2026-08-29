@@ -17,7 +17,8 @@ import { MediaPoster } from '@/components/ui/MediaPoster';
 import type { CatalogMedia } from '@/features/catalog/types';
 import { getLibraryEntryProgress, getLibraryEntryStatusLabel } from '@/features/library/hooks';
 import { createMediaDetailPath } from '@/features/media/route';
-import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
+import { createEpisodeKey } from '@/features/media/tvProgress';
+import type { LibraryEntryRecord, LibraryStatus, TvSeasonProgressMeta } from '@/types/media';
 import { listSpring, quickFade } from '@/utils/motion';
 
 type LibraryMediaItemProps = {
@@ -30,6 +31,11 @@ type LibraryMediaItemProps = {
     media: CatalogMedia,
     status: LibraryStatus,
     previousEntry?: LibraryEntryRecord
+  ) => void;
+  onSetProgress?: (
+    media: CatalogMedia,
+    seasons: TvSeasonProgressMeta[],
+    watchedEpisodes: string[]
   ) => void;
   onRemove: (media: CatalogMedia, previousEntry?: LibraryEntryRecord) => void;
 };
@@ -105,6 +111,7 @@ export function LibraryMediaItem({
   isBusy = false,
   motionIndex = 0,
   onSetStatus,
+  onSetProgress,
   onRemove
 }: LibraryMediaItemProps) {
   const navigate = useNavigate();
@@ -114,10 +121,26 @@ export function LibraryMediaItem({
   const statusLabel = getLibraryEntryStatusLabel(entry);
   const progress = getLibraryEntryProgress(entry);
   const showProgress = media.mediaType === 'tv' && progress.isPartial;
+  const canMarkNextEpisode =
+    mode === 'library' && showProgress && Boolean(entry?.tvProgress && progress.nextEpisode);
   const nextEpisodeLabel = showProgress ? formatNextEpisodeLabel(progress) : undefined;
   const remainingEpisodesLabel = showProgress ? formatRemainingEpisodes(progress) : undefined;
   const detailPath = createMediaDetailPath(media.mediaType, media.tmdbId);
   const exitX = entry?.status === 'watchlist' ? 28 : -28;
+
+  function markNextEpisodeWatched() {
+    if (!entry?.tvProgress || !progress.nextEpisode || !onSetProgress) {
+      return;
+    }
+
+    const episodeKey = createEpisodeKey(
+      progress.nextEpisode.seasonNumber,
+      progress.nextEpisode.episodeNumber
+    );
+    const watchedEpisodes = Array.from(new Set([...entry.tvProgress.watchedEpisodes, episodeKey]));
+
+    onSetProgress(media, entry.tvProgress.seasons, watchedEpisodes);
+  }
 
   return (
     <motion.article
@@ -229,16 +252,23 @@ export function LibraryMediaItem({
             <motion.button
               type="button"
               disabled={isBusy}
-              onClick={() => onSetStatus(media, otherStatus, entry)}
+              onClick={
+                canMarkNextEpisode
+                  ? markNextEpisodeWatched
+                  : () => onSetStatus(media, otherStatus, entry)
+              }
+              aria-label={
+                canMarkNextEpisode ? `Marquer le prochain épisode de ${media.title} vu` : undefined
+              }
               whileTap={reducedMotion || isBusy ? undefined : { scale: 0.975 }}
               className="pressable focus-ring flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-brand px-4 text-sm font-bold text-white shadow-[0_10px_24px_rgba(89,183,255,0.24)] disabled:cursor-not-allowed disabled:opacity-55"
             >
-              {otherStatus === 'watched' ? (
+              {canMarkNextEpisode || otherStatus === 'watched' ? (
                 <CheckCircle2 aria-hidden="true" className="size-4" />
               ) : (
                 <Clock3 aria-hidden="true" className="size-4" />
               )}
-              {getPrimaryActionLabel(otherStatus)}
+              {canMarkNextEpisode ? 'Prochain vu' : getPrimaryActionLabel(otherStatus)}
             </motion.button>
             <ActionMenu
               label={`Options pour ${media.title}`}

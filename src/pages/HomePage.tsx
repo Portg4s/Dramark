@@ -1,4 +1,4 @@
-import { ArrowRight, Tv } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Tv } from 'lucide-react';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
@@ -13,10 +13,12 @@ import { TrendingRail } from '@/features/discovery/TrendingRail';
 import {
   getLibraryEntryProgress,
   mapLibraryEntryToCatalogMedia,
-  useLibraryEntries
+  useLibraryEntries,
+  useLibraryMediaActions
 } from '@/features/library/hooks';
 import { sortLibraryEntries } from '@/features/library/sorting';
 import { createMediaDetailPath } from '@/features/media/route';
+import { createEpisodeKey } from '@/features/media/tvProgress';
 import type { DiscoveryFilterKey, DiscoverySortKey } from '@/services/tmdb/discovery';
 import type { LibraryEntryRecord } from '@/types/media';
 import { listSpring, motionEase, quickFade } from '@/utils/motion';
@@ -40,7 +42,42 @@ function AnimatedCount({ value }: { value: number }) {
   );
 }
 
-function ContinueCard({ entry }: { entry: LibraryEntryRecord }) {
+function formatNextEpisodeLabel(
+  progress: ReturnType<typeof getLibraryEntryProgress>
+): string | undefined {
+  if (!progress.nextEpisode) {
+    return undefined;
+  }
+
+  return `Saison ${progress.nextEpisode.seasonNumber} · Épisode ${progress.nextEpisode.episodeNumber}`;
+}
+
+function getResumeTimestamp(entry: LibraryEntryRecord): number {
+  return new Date(entry.tvProgress?.updatedAt ?? entry.updatedAt ?? entry.addedAt).getTime();
+}
+
+function sortResumeEntries(entries: LibraryEntryRecord[]): LibraryEntryRecord[] {
+  return [...entries].sort(
+    (first, second) => getResumeTimestamp(second) - getResumeTimestamp(first)
+  );
+}
+
+function getNextWatchedEpisodes(entry: LibraryEntryRecord): string[] | undefined {
+  const progress = getLibraryEntryProgress(entry);
+
+  if (!entry.tvProgress || !progress.nextEpisode) {
+    return undefined;
+  }
+
+  const episodeKey = createEpisodeKey(
+    progress.nextEpisode.seasonNumber,
+    progress.nextEpisode.episodeNumber
+  );
+
+  return Array.from(new Set([...entry.tvProgress.watchedEpisodes, episodeKey]));
+}
+
+function ResumeMiniCard({ entry }: { entry: LibraryEntryRecord }) {
   const reducedMotion = useReducedMotion();
   const media = mapLibraryEntryToCatalogMedia(entry);
   const progress = getLibraryEntryProgress(entry);
@@ -55,7 +92,7 @@ function ContinueCard({ entry }: { entry: LibraryEntryRecord }) {
       <NavLink
         to={createMediaDetailPath(entry.mediaType, entry.tmdbId)}
         className="focus-ring group block overflow-hidden rounded-[1.2rem] bg-surface/64 shadow-[0_16px_38px_rgba(0,0,0,0.24)]"
-        aria-label={`Continuer ${media.title}`}
+        aria-label={`Reprendre ${media.title}`}
       >
         <div className="grid grid-cols-[5.2rem_1fr] gap-3 p-2.5">
           <MediaPoster
@@ -67,16 +104,16 @@ function ContinueCard({ entry }: { entry: LibraryEntryRecord }) {
           <div className="min-w-0 py-1 pr-1">
             <div className="mb-1 flex items-center gap-1 text-xs font-bold text-brand-soft">
               <Tv aria-hidden="true" className="size-3.5" />
-              Continuer
+              Reprendre
             </div>
             <h3 className="line-clamp-2 text-sm font-black leading-5 text-white">{media.title}</h3>
             {progress.nextEpisode ? (
               <p className="mt-1 text-xs font-semibold text-white/82">
-                Saison {progress.nextEpisode.seasonNumber} {'\u00b7 prochain \u00e9pisode'}
+                {formatNextEpisodeLabel(progress)}
               </p>
             ) : null}
             <p className="mt-1 text-xs text-muted">
-              {progress.watched} / {progress.total} épisodes
+              {progress.watched} / {progress.total} épisodes vus
             </p>
             <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-white/10">
               <motion.span
@@ -93,15 +130,105 @@ function ContinueCard({ entry }: { entry: LibraryEntryRecord }) {
   );
 }
 
-function ContinueRail({ entries }: { entries: LibraryEntryRecord[] }) {
+function ResumeHeroCard({
+  entry,
+  isBusy,
+  onMarkNextEpisode
+}: {
+  entry: LibraryEntryRecord;
+  isBusy: boolean;
+  onMarkNextEpisode: (entry: LibraryEntryRecord) => void;
+}) {
+  const reducedMotion = useReducedMotion();
+  const media = mapLibraryEntryToCatalogMedia(entry);
+  const progress = getLibraryEntryProgress(entry);
+  const nextEpisodeLabel = formatNextEpisodeLabel(progress);
+
+  return (
+    <motion.article
+      layout
+      className="overflow-hidden rounded-[1.35rem] bg-[linear-gradient(135deg,rgba(89,183,255,0.15),rgba(16,29,58,0.82)_46%,rgba(16,29,58,0.70))] p-3 shadow-[0_18px_44px_rgba(0,0,0,0.28)] ring-1 ring-white/[0.04]"
+      whileTap={reducedMotion ? undefined : { scale: 0.992 }}
+      transition={listSpring}
+    >
+      <div className="grid grid-cols-[6rem_1fr] gap-3">
+        <NavLink
+          to={createMediaDetailPath(entry.mediaType, entry.tmdbId)}
+          className="focus-ring block rounded-[1.05rem]"
+          aria-label={`Ouvrir la fiche de ${media.title}`}
+        >
+          <MediaPoster
+            title={media.title}
+            posterPath={media.posterPath}
+            size="w185"
+            className="rounded-[1rem]"
+          />
+        </NavLink>
+        <div className="min-w-0 py-1">
+          <NavLink
+            to={createMediaDetailPath(entry.mediaType, entry.tmdbId)}
+            className="focus-ring block rounded-lg"
+          >
+            <div className="mb-1 flex items-center gap-1 text-xs font-black text-brand-soft">
+              <Tv aria-hidden="true" className="size-3.5" />
+              Prochain épisode
+            </div>
+            <h3 className="line-clamp-2 text-lg font-black leading-6 text-white">{media.title}</h3>
+            {nextEpisodeLabel ? (
+              <p className="mt-1 text-sm font-bold text-white/88">{nextEpisodeLabel}</p>
+            ) : null}
+            <p className="mt-1 text-xs font-semibold text-muted">
+              {progress.watched} / {progress.total} épisodes vus
+            </p>
+            <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-white/10">
+              <motion.span
+                className="block h-full origin-left rounded-full bg-brand"
+                initial={false}
+                animate={{ scaleX: progress.ratio }}
+                transition={reducedMotion ? { duration: 0.01 } : listSpring}
+              />
+            </span>
+          </NavLink>
+          <button
+            type="button"
+            disabled={isBusy || !progress.nextEpisode}
+            onClick={() => onMarkNextEpisode(entry)}
+            className="pressable focus-ring mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-brand px-4 text-sm font-black text-white shadow-[0_12px_28px_rgba(89,183,255,0.26)] disabled:cursor-not-allowed disabled:opacity-55"
+            aria-label={`Marquer le prochain épisode de ${media.title} vu`}
+          >
+            <CheckCircle2 aria-hidden="true" className="size-4" />
+            Marquer vu
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function ResumeSection({
+  entries,
+  isBusy,
+  onMarkNextEpisode
+}: {
+  entries: LibraryEntryRecord[];
+  isBusy: boolean;
+  onMarkNextEpisode: (entry: LibraryEntryRecord) => void;
+}) {
   if (entries.length === 0) {
     return null;
   }
 
+  const featuredEntry = entries[0];
+  const otherEntries = entries.slice(1);
+
+  if (!featuredEntry) {
+    return null;
+  }
+
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-bold text-white">Continuer</h2>
+        <h2 className="text-xl font-bold text-white">À reprendre</h2>
         <NavLink
           to="/liste"
           className="focus-ring rounded-full px-2 py-1 text-sm font-semibold text-brand-soft"
@@ -109,19 +236,27 @@ function ContinueRail({ entries }: { entries: LibraryEntryRecord[] }) {
           Tout voir
         </NavLink>
       </div>
-      <LayoutGroup id="home-continue-rail">
-        <motion.div
-          layout
-          className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6"
-          transition={listSpring}
-        >
-          <AnimatePresence initial={false}>
-            {entries.slice(0, 8).map((entry) => (
-              <ContinueCard key={entry.id} entry={entry} />
-            ))}
-          </AnimatePresence>
-        </motion.div>
-      </LayoutGroup>
+      <ResumeHeroCard entry={featuredEntry} isBusy={isBusy} onMarkNextEpisode={onMarkNextEpisode} />
+      {otherEntries.length > 0 ? (
+        <div className="space-y-3">
+          <h3 className="text-sm font-black uppercase tracking-[0.12em] text-subtle">
+            Autres en cours
+          </h3>
+          <LayoutGroup id="home-resume-rail">
+            <motion.div
+              layout
+              className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6"
+              transition={listSpring}
+            >
+              <AnimatePresence initial={false}>
+                {otherEntries.slice(0, 7).map((entry) => (
+                  <ResumeMiniCard key={entry.id} entry={entry} />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          </LayoutGroup>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -177,19 +312,34 @@ export function HomePage() {
   const [discoverySort, setDiscoverySort] = useState<DiscoverySortKey>('trending');
   const watchlist = useLibraryEntries('watchlist');
   const watched = useLibraryEntries('watched');
+  const libraryActions = useLibraryMediaActions();
   const discovery = useDiscoveryMedia(discoveryFilter, discoverySort);
   const watchlistEntries = sortLibraryEntries(watchlist.data ?? [], 'recent');
   const watchedEntries = sortLibraryEntries(watched.data ?? [], 'recent');
   const libraryEntries = new Map(
     [...watchlistEntries, ...watchedEntries].map((entry) => [entry.id, entry])
   );
-  const continueEntries = watchlistEntries.filter(
-    (entry) => getLibraryEntryProgress(entry).isPartial
+  const continueEntries = sortResumeEntries(
+    watchlistEntries.filter((entry) => getLibraryEntryProgress(entry).isPartial)
   );
   const pureWatchlistEntries = watchlistEntries.filter(
     (entry) => !getLibraryEntryProgress(entry).isPartial
   );
   const hasEntries = watchlistEntries.length > 0 || watchedEntries.length > 0;
+
+  function markNextEpisodeWatched(entry: LibraryEntryRecord) {
+    const watchedEpisodes = getNextWatchedEpisodes(entry);
+
+    if (!entry.tvProgress || !watchedEpisodes) {
+      return;
+    }
+
+    libraryActions.setTvProgressForMedia(
+      mapLibraryEntryToCatalogMedia(entry),
+      entry.tvProgress.seasons,
+      watchedEpisodes
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -231,7 +381,11 @@ export function HomePage() {
 
       {hasEntries ? (
         <div className="relative space-y-8">
-          <ContinueRail entries={continueEntries} />
+          <ResumeSection
+            entries={continueEntries}
+            isBusy={libraryActions.isMutating}
+            onMarkNextEpisode={markNextEpisodeWatched}
+          />
           <HomeRail
             title="À regarder"
             entries={pureWatchlistEntries}

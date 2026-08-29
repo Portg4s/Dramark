@@ -4,15 +4,22 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LibraryPage } from '@/pages/LibraryPage';
-import type { LibraryEntryRecord, LibraryStatus } from '@/types/media';
+import type { LibraryActivityRecord, LibraryEntryRecord, LibraryStatus } from '@/types/media';
 
 const libraryEntriesMock = vi.hoisted(() => ({
+  activity: [] as LibraryActivityRecord[],
   watchlist: [] as LibraryEntryRecord[],
   watched: [] as LibraryEntryRecord[]
 }));
 
 const toastMock = vi.hoisted(() => ({
   showToast: vi.fn()
+}));
+
+const libraryActionsMock = vi.hoisted(() => ({
+  removeMedia: vi.fn(),
+  setStatusForMedia: vi.fn(),
+  setTvProgressForMedia: vi.fn()
 }));
 
 vi.mock('@/features/library/hooks', async () => {
@@ -33,10 +40,16 @@ vi.mock('@/features/library/hooks', async () => {
       isLoading: false,
       error: null
     }),
+    useLibraryActivity: () => ({
+      data: libraryEntriesMock.activity,
+      isLoading: false,
+      error: null
+    }),
     useLibraryMediaActions: () => ({
       isMutating: false,
-      removeMedia: vi.fn(),
-      setStatusForMedia: vi.fn()
+      removeMedia: libraryActionsMock.removeMedia,
+      setStatusForMedia: libraryActionsMock.setStatusForMedia,
+      setTvProgressForMedia: libraryActionsMock.setTvProgressForMedia
     })
   };
 });
@@ -59,10 +72,14 @@ function makeWatchedMovie(index: number): LibraryEntryRecord {
 
 describe('LibraryPage', () => {
   afterEach(() => {
+    libraryEntriesMock.activity = [];
     libraryEntriesMock.watchlist = [];
     libraryEntriesMock.watched = [];
     window.localStorage.clear();
     toastMock.showToast.mockReset();
+    libraryActionsMock.removeMedia.mockReset();
+    libraryActionsMock.setStatusForMedia.mockReset();
+    libraryActionsMock.setTvProgressForMedia.mockReset();
     cleanup();
   });
 
@@ -125,6 +142,45 @@ describe('LibraryPage', () => {
     expect(await screen.findByRole('heading', { name: 'Long Anime' })).toBeInTheDocument();
     expect(screen.getByText('Saison 1 · Épisode 3')).toBeInTheDocument();
     expect(screen.getByText('8 épisodes restants')).toBeInTheDocument();
+  });
+
+  it('marks the next episode from the in-progress library view', async () => {
+    const user = userEvent.setup();
+
+    libraryEntriesMock.watchlist = [
+      {
+        id: 'tv:1',
+        mediaType: 'tv',
+        tmdbId: 1,
+        status: 'watchlist',
+        addedAt: '2026-08-24T10:00:00.000Z',
+        updatedAt: '2026-08-24T10:00:00.000Z',
+        snapshot: { title: 'Long Anime', releaseYear: 2026 },
+        tvProgress: {
+          watchedEpisodes: ['1:1', '1:2'],
+          seasons: [{ seasonNumber: 1, episodeCount: 10 }],
+          updatedAt: '2026-08-24T12:00:00.000Z'
+        }
+      }
+    ];
+
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: /En cours\s+1/i }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Marquer le prochain épisode de Long Anime vu' })
+    );
+
+    expect(libraryActionsMock.setTvProgressForMedia).toHaveBeenCalledWith(
+      expect.objectContaining({ tmdbId: 1, title: 'Long Anime' }),
+      [{ seasonNumber: 1, episodeCount: 10 }],
+      ['1:1', '1:2', '1:3']
+    );
+    expect(libraryActionsMock.setStatusForMedia).not.toHaveBeenCalled();
   });
 
   it('shows compact local stats and reveals unlocked achievements on demand', async () => {
@@ -201,5 +257,47 @@ describe('LibraryPage', () => {
         })
       )
     );
+  });
+
+  it('shows recent local activity without opening the full list', () => {
+    libraryEntriesMock.watchlist = [
+      {
+        id: 'tv:1',
+        mediaType: 'tv',
+        tmdbId: 1,
+        status: 'watchlist',
+        addedAt: '2026-08-24T10:00:00.000Z',
+        updatedAt: '2026-08-24T10:00:00.000Z',
+        snapshot: { title: 'Slow Drama', releaseYear: 2026 },
+        tvProgress: {
+          watchedEpisodes: ['1:1', '1:2'],
+          seasons: [{ seasonNumber: 1, episodeCount: 10 }],
+          updatedAt: '2026-08-28T19:00:00.000Z'
+        }
+      }
+    ];
+    libraryEntriesMock.activity = [
+      {
+        id: 'activity-1',
+        action: 'episode_watched',
+        mediaType: 'tv',
+        tmdbId: 1,
+        episodeKey: '1:2',
+        seasonNumber: 1,
+        episodeNumber: 2,
+        createdAt: '2026-08-28T19:00:00.000Z',
+        snapshot: { title: 'Slow Drama', releaseYear: 2026 }
+      }
+    ];
+
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('heading', { name: 'Activité récente' })).toBeInTheDocument();
+    expect(screen.getByText('Slow Drama')).toBeInTheDocument();
+    expect(screen.getByText('Saison 1 · Épisode 2')).toBeInTheDocument();
   });
 });

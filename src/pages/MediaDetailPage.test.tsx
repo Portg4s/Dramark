@@ -44,6 +44,7 @@ const tvDetails: MediaDetails = {
   cast: [],
   seasonsCount: 1,
   episodesCount: 2,
+  episodeRuntimeMinutes: 45,
   seasons: [{ tmdbId: 101, seasonNumber: 1, episodeCount: 2, name: 'Saison 1' }],
   status: 'Ended'
 };
@@ -167,6 +168,12 @@ describe('MediaDetailPage', () => {
       [{ seasonNumber: 1, episodeCount: 2 }],
       ['1:1']
     );
+  });
+
+  it('shows the estimated remaining watch time in the progress summary', () => {
+    renderMediaDetailPage();
+
+    expect(screen.getByText('Environ 1 h 30 restantes')).toBeInTheDocument();
   });
 
   it('lets the hero fade continue into the page content', () => {
